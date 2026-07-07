@@ -36,7 +36,7 @@ export default function HomeScreen() {
             Namaste
           </Text>
           <Text className="text-3xl font-extrabold text-bharat-dark mt-1">
-            Rajesh Kumar
+            Citizen
           </Text>
           <Text className="text-sm text-slate-500 mt-2 font-medium">
             How can your AI Civic Companion assist you today?
