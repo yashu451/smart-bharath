@@ -1,0 +1,16 @@
+{
+  "name": "smart-bharat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Smart Bharat - Unified Root Launcher for Backend and Frontend",
+  "scripts": {
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue.bold,magenta.bold\" \"npm --prefix backend run dev\" \"npm --prefix new run start -- --port 8082\"",
+    "start": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue.bold,magenta.bold\" \"npm --prefix backend start\" \"npm --prefix new start -- --port 8082\"",
+    "backend": "npm --prefix backend run dev",
+    "frontend": "npm --prefix new run start -- --port 8082",
+    "install:all": "npm install && npm --prefix backend install && npm --prefix new install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

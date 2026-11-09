@@ -1,0 +1,16 @@
+# Root
+node_modules/
+.env
+.env.local
+
+# Backend
+backend/node_modules/
+backend/.env
+backend/.env.local
+backend/uploads/
+
+# Frontend
+new/node_modules/
+new/.env
+new/.env.local
+
