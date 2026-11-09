@@ -1,16 +1,49 @@
-# Root
+# Dependencies
 node_modules/
-.env
-.env.local
-
-# Backend
 backend/node_modules/
+
+# Environment files and secrets (Private - do not commit)
+.env
+.env*.local
+*.env
 backend/.env
-backend/.env.local
+backend/.env*.local
+
+# Backend uploads and storage
 backend/uploads/
 
-# Frontend
-new/node_modules/
-new/.env
-new/.env.local
+# Expo
+.expo/
+dist/
+dist-test/
+web-build/
+expo-env.d.ts
 
+# Native build artifacts
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro cache
+.metro-health-check*
+
+# Debug logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# OS and system files
+.DS_Store
+Thumbs.db
+*.pem
+
+# TypeScript
+*.tsbuildinfo
+
+# Generated native folders
+/ios
+/android

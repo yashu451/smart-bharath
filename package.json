@@ -1,16 +1,56 @@
 {
   "name": "smart-bharat",
+  "main": "expo-router/entry",
   "version": "1.0.0",
   "private": true,
-  "description": "Smart Bharat - Unified Root Launcher for Backend and Frontend",
-  "scripts": {
-    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue.bold,magenta.bold\" \"npm --prefix backend run dev\" \"npm --prefix new run start -- --port 8082\"",
-    "start": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue.bold,magenta.bold\" \"npm --prefix backend start\" \"npm --prefix new start -- --port 8082\"",
-    "backend": "npm --prefix backend run dev",
-    "frontend": "npm --prefix new run start -- --port 8082",
-    "install:all": "npm install && npm --prefix backend install && npm --prefix new install"
+  "description": "Smart Bharat - Unified National Citizen Gateway (Frontend & Backend)",
+  "dependencies": {
+    "@expo/ui": "~57.0.13",
+    "expo": "~57.0.16",
+    "expo-constants": "~57.0.3",
+    "expo-device": "~57.0.1",
+    "expo-font": "~57.0.0",
+    "expo-glass-effect": "~57.0.1",
+    "expo-image": "~57.0.3",
+    "expo-linear-gradient": "~57.0.1",
+    "expo-linking": "~57.0.7",
+    "expo-router": "~57.0.16",
+    "expo-splash-screen": "~57.0.8",
+    "expo-status-bar": "~57.0.1",
+    "expo-symbols": "~57.0.2",
+    "expo-system-ui": "~57.0.2",
+    "expo-web-browser": "~57.0.2",
+    "nativewind": "^4.2.6",
+    "postcss": "^8.5.16",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.2",
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-reanimated": "4.5.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-web": "~0.21.0",
+    "react-native-worklets": "0.10.1",
+    "tailwindcss": "^3.4.19"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "@types/react": "~19.2.2",
+    "concurrently": "^9.1.2",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~57.0.1",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web --port 8082",
+    "build": "expo export -p web",
+    "lint": "expo lint",
+    "reset-project": "node ./scripts/reset-project.js",
+    "backend": "npm --prefix backend run dev",
+    "backend:start": "npm --prefix backend start",
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue.bold,magenta.bold\" \"npm --prefix backend run dev\" \"expo start --web --port 8082\"",
+    "install:all": "npm install && npm --prefix backend install"
   }
 }
