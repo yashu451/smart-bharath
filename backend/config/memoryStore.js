@@ -1,14 +1,13 @@
-// Shared in-memory resilience store for offline/reconnecting conditions
-const memoryUsers = [];
-const memoryActivities = [];
-const memoryDocuments = [];
-const memoryChat = [];
-const memoryGrievances = [];
+// Persistent store bridge
+const persistentStore = require('./persistentStore');
 
 module.exports = {
-  memoryUsers,
-  memoryActivities,
-  memoryDocuments,
-  memoryChat,
-  memoryGrievances,
+  memoryUsers: persistentStore.store.users,
+  memoryActivities: persistentStore.store.activities,
+  memoryDocuments: persistentStore.store.documents,
+  memoryChat: persistentStore.store.chat,
+  memoryGrievances: persistentStore.store.grievances,
+  memorySavedSchemes: persistentStore.store.saved_schemes,
+  persistentStore,
+  saveToDisk: persistentStore.saveToDisk,
 };

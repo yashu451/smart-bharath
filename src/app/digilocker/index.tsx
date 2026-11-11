@@ -22,18 +22,20 @@ export default function DigiLockerHomeScreen() {
 
       {/* Header Bar */}
       <View className="px-6 py-4 flex-row items-center border-b border-[#CADDCB] bg-[#EDF5EE]">
-        <TouchableOpacity
-          onPress={() => router.replace('/home')}
-          className="w-11 h-11 rounded-2xl bg-[#E0EDE1] border border-[#CADDCB] justify-center items-center mr-3.5 shadow-xs"
-          activeOpacity={0.7}
-        >
-          <Text className="text-[#14532D] font-black text-lg">←</Text>
-        </TouchableOpacity>
-        <View className="flex-1">
-          <Text className="text-base font-black text-[#14532D]">DigiLocker Wallet</Text>
-          <Text className="text-[10px] font-bold text-[#4B6350] uppercase tracking-widest mt-0.5">
-            Personal Document Storage
-          </Text>
+        <View className="max-w-xl w-full mx-auto flex-row items-center">
+          <TouchableOpacity
+            onPress={() => router.replace('/home')}
+            className="w-12 h-12 rounded-2xl bg-[#E0EDE1] border border-[#CADDCB] justify-center items-center mr-4 shadow-xs"
+            activeOpacity={0.7}
+          >
+            <Text className="text-[#14532D] font-black text-xl">←</Text>
+          </TouchableOpacity>
+          <View className="flex-1">
+            <Text className="text-xl font-black text-[#14532D]">DigiLocker Wallet</Text>
+            <Text className="text-xs font-bold text-[#4B6350] uppercase tracking-widest mt-0.5">
+              Personal Document Storage
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -41,27 +43,28 @@ export default function DigiLockerHomeScreen() {
         style={{ flex: 1 }}
         contentContainerStyle={{
           flexGrow: 1,
-          paddingHorizontal: 20,
-          paddingVertical: 32,
+          paddingHorizontal: 24,
+          paddingVertical: 36,
+          paddingBottom: 130,
           justifyContent: 'space-between',
           alignItems: 'center',
         }}
       >
         {/* Core Info Section */}
-        <View className="w-full max-w-md items-center">
+        <View className="w-full max-w-xl items-center">
           {/* DigiLocker Icon Badge in Lavender / Forest Green */}
-          <View className="w-20 h-20 bg-[#EEF2FF] border border-[#C7D2FE] rounded-3xl justify-center items-center mb-5 shadow-xs relative">
-            <Text className="text-4xl">📁</Text>
-            <View className="absolute -bottom-1.5 -right-1.5 w-7 h-7 bg-[#14532D] rounded-full justify-center items-center border-2 border-white">
-              <Text className="text-white text-xs">🔒</Text>
+          <View className="w-24 h-24 bg-[#EEF2FF] border border-[#C7D2FE] rounded-3xl justify-center items-center mb-6 shadow-xs relative">
+            <Text className="text-5xl">📁</Text>
+            <View className="absolute -bottom-1.5 -right-1.5 w-8 h-8 bg-[#14532D] rounded-full justify-center items-center border-2 border-white">
+              <Text className="text-white text-sm">🔒</Text>
             </View>
           </View>
 
           {/* Title & Branding */}
-          <Text className="text-2xl font-black text-[#14532D] tracking-tight text-center">
+          <Text className="text-3xl font-black text-[#14532D] tracking-tight text-center">
             Personal Document Wallet
           </Text>
-          <Text className="text-xs font-semibold text-slate-500 mt-1 text-center">
+          <Text className="text-base font-medium text-slate-600 mt-2 text-center">
             Secure Private Storage for Citizen Certificates & IDs
           </Text>
 
@@ -74,48 +77,48 @@ export default function DigiLockerHomeScreen() {
               shadowRadius: 10,
               elevation: 2,
             }}
-            className="w-full bg-[#F3F8F4] border border-[#CADDCB] p-6 rounded-3xl mt-6"
+            className="w-full bg-[#F3F8F4] border border-[#CADDCB] p-7 rounded-3xl mt-7"
           >
-            <View className="flex-row items-center mb-3">
-              <View className="w-2 h-2 rounded-full bg-[#6366F1] mr-2" />
-              <Text className="text-xs font-black text-[#14532D] uppercase tracking-wider">
+            <View className="flex-row items-center mb-3.5">
+              <View className="w-2.5 h-2.5 rounded-full bg-[#6366F1] mr-2.5" />
+              <Text className="text-sm font-black text-[#14532D] uppercase tracking-wider">
                 Private Cloud Vault
               </Text>
             </View>
-            <Text className="text-slate-600 text-xs font-medium leading-relaxed">
+            <Text className="text-slate-700 text-sm font-medium leading-relaxed">
               Store, view, and organize your personal identity proofs, educational marksheet credentials, and utility certificates securely under your account.
             </Text>
-            <View className="h-px bg-[#CADDCB] my-3.5" />
-            <Text className="text-slate-600 text-xs font-medium leading-relaxed">
+            <View className="h-px bg-[#CADDCB] my-4" />
+            <Text className="text-slate-700 text-sm font-medium leading-relaxed">
               • Upload PDF, JPG, and PNG documents from your device anytime.
             </Text>
-            <Text className="text-slate-600 text-xs font-medium leading-relaxed mt-2">
+            <Text className="text-slate-700 text-sm font-medium leading-relaxed mt-2.5">
               • Zero public URLs — files are strictly private to your authenticated account.
             </Text>
           </View>
 
           {/* Integration Status Notice */}
-          <View className="w-full bg-[#FFFBEB] border border-[#FDE68A] rounded-2xl p-4 mt-4">
+          <View className="w-full bg-[#FFFBEB] border border-[#FDE68A] rounded-2xl p-4.5 mt-5">
             <View className="flex-row items-center mb-1.5">
-              <Text className="text-base mr-2">🏛️</Text>
-              <Text className="text-xs font-bold text-amber-900">
+              <Text className="text-lg mr-2.5">🏛️</Text>
+              <Text className="text-sm font-black text-amber-900">
                 Official DigiLocker Sync Status
               </Text>
             </View>
-            <Text className="text-[11px] text-amber-800 leading-relaxed font-medium">
+            <Text className="text-xs text-amber-800 leading-relaxed font-medium">
               Direct fetching from government issuing authorities is <Text className="font-bold">Coming Soon – Official Integration Required</Text>. Production API onboarding with MeitY is underway.
             </Text>
           </View>
         </View>
 
         {/* Action Buttons Area */}
-        <View className="w-full max-w-md mt-6 space-y-3">
+        <View className="w-full max-w-xl mt-7 space-y-3.5">
           <TouchableOpacity
             onPress={() => router.push('/digilocker/documents' as any)}
             activeOpacity={0.85}
-            className="w-full py-4 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
+            className="w-full py-4.5 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
           >
-            <Text className="text-white text-xs font-black uppercase tracking-wider">
+            <Text className="text-white text-base font-black uppercase tracking-wider">
               Open My Document Wallet →
             </Text>
           </TouchableOpacity>
@@ -123,9 +126,9 @@ export default function DigiLockerHomeScreen() {
           <TouchableOpacity
             onPress={handleFetchFromDigiLocker}
             activeOpacity={0.7}
-            className="w-full py-3.5 border border-[#CADDCB] bg-[#EDF5EE] rounded-2xl justify-center items-center shadow-xs"
+            className="w-full py-4 border border-[#CADDCB] bg-[#EDF5EE] rounded-2xl justify-center items-center shadow-xs"
           >
-            <Text className="text-slate-700 text-xs font-bold uppercase tracking-wider">
+            <Text className="text-slate-700 text-sm font-black uppercase tracking-wider">
               Fetch from DigiLocker (Coming Soon)
             </Text>
           </TouchableOpacity>

@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
+const { syncWithMongoDB } = require('./persistentStore');
 
 dotenv.config({ path: path.join(__dirname, '../.env') });
 dotenv.config();
@@ -24,6 +25,7 @@ const connectDB = async () => {
       console.log(`\n===============================================================`);
       console.log(`[MongoDB] Atlas Connected successfully: ${conn.connection.host}`);
       console.log(`===============================================================\n`);
+      syncWithMongoDB(mongoose).catch((err) => console.warn('[MongoDB Sync]', err.message));
       return conn;
     } catch (error) {
       if (
@@ -60,6 +62,7 @@ const connectDB = async () => {
       try {
         await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 3000 });
         console.log(`\n[MongoDB] Atlas Connected successfully on auto-retry!\n`);
+        syncWithMongoDB(mongoose).catch((err) => console.warn('[MongoDB Sync]', err.message));
         clearInterval(retryInterval);
       } catch {
         // Keep retrying quietly until Atlas whitelists the connection

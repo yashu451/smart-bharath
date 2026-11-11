@@ -35,7 +35,7 @@ const RESCHEDULE_TIME_SLOTS = [
 
 export interface ActivityRecord {
   _id: string;
-  type: 'appointment' | 'grievance' | 'scheme' | 'document';
+  type: 'appointment' | 'grievance' | 'scheme' | 'document' | 'assistant' | 'service' | 'other';
   title: string;
   subtitle?: string;
   token?: string;
@@ -54,6 +54,7 @@ const FILTER_TABS: Array<{ key: string; label: string; icon: string }> = [
   { key: 'grievance', label: 'Grievances', icon: '📢' },
   { key: 'scheme', label: 'Schemes', icon: '🌾' },
   { key: 'document', label: 'Documents', icon: '📁' },
+  { key: 'assistant', label: 'AI Assistant', icon: '🤖' },
 ];
 
 export default function MyAppointmentsScreen() {
@@ -233,368 +234,372 @@ export default function MyAppointmentsScreen() {
 
       {/* Header Bar */}
       <View className="px-6 py-4 flex-row items-center border-b border-[#CADDCB] bg-[#EDF5EE]">
-        <TouchableOpacity
-          onPress={() => router.replace('/home')}
-          className="w-11 h-11 rounded-2xl bg-[#E0EDE1] border border-[#CADDCB] justify-center items-center mr-3.5 shadow-xs"
-          activeOpacity={0.7}
-        >
-          <Text className="text-[#14532D] font-black text-lg">←</Text>
-        </TouchableOpacity>
-        <View className="flex-1">
-          <Text className="text-base font-black text-[#14532D]">Activity Center</Text>
-          <Text className="text-[10px] font-bold text-[#4B6350] uppercase tracking-widest mt-0.5">Smart Bharat Official Services</Text>
+        <View className="max-w-5xl w-full mx-auto flex-row items-center">
+          <TouchableOpacity
+            onPress={() => router.replace('/home')}
+            className="w-12 h-12 rounded-2xl bg-[#E0EDE1] border border-[#CADDCB] justify-center items-center mr-4 shadow-xs"
+            activeOpacity={0.7}
+          >
+            <Text className="text-[#14532D] font-black text-xl">←</Text>
+          </TouchableOpacity>
+          <View className="flex-1">
+            <Text className="text-xl font-black text-[#14532D]">Activity Center</Text>
+            <Text className="text-xs font-bold text-[#4B6350] uppercase tracking-widest mt-0.5">Smart Bharat Official Services</Text>
+          </View>
         </View>
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 50 }}>
-        {/* Title Details with Orange Indicator */}
-        <View className="mb-5 flex-row items-center">
-          <View className="w-1 h-6 rounded-full bg-[#F97316] mr-3" />
-          <View>
-            <Text className="text-2xl font-black text-[#14532D] tracking-tight">Your Activities</Text>
-            <Text className="text-xs font-semibold text-slate-500 mt-0.5">
-              Monitor and manage your booked visits, complaints & welfare schemes
-            </Text>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingBottom: 130 }}>
+        <View className="max-w-5xl w-full mx-auto">
+          {/* Title Details with Orange Indicator */}
+          <View className="mb-6 flex-row items-center">
+            <View className="w-1.5 h-8 rounded-full bg-[#F97316] mr-3.5" />
+            <View>
+              <Text className="text-3xl font-black text-[#14532D] tracking-tight">Your Activities</Text>
+              <Text className="text-base font-medium text-slate-600 mt-1">
+                Monitor and manage your booked visits, complaints & welfare schemes
+              </Text>
+            </View>
           </View>
-        </View>
 
-        {/* Filter Chips Bar */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          className="mb-6 flex-row"
-          contentContainerStyle={{ paddingVertical: 4 }}
-        >
-          {FILTER_TABS.map((tab) => {
-            const isActive = selectedFilter === tab.key;
-            return (
-              <TouchableOpacity
-                key={tab.key}
-                onPress={() => handleFilterChange(tab.key)}
-                className={`px-4 py-2.5 rounded-2xl mr-2.5 flex-row items-center border ${
-                  isActive
-                    ? 'bg-[#14532D] border-[#14532D] shadow-xs'
-                    : 'bg-[#EDF5EE] border-[#CADDCB]'
-                }`}
-                activeOpacity={0.7}
-              >
-                <Text className="text-xs mr-1.5">{tab.icon}</Text>
-                <Text
-                  className={`text-xs font-black ${
-                    isActive ? 'text-white' : 'text-slate-700'
+          {/* Filter Chips Bar */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="mb-7 flex-row"
+            contentContainerStyle={{ paddingVertical: 4 }}
+          >
+            {FILTER_TABS.map((tab) => {
+              const isActive = selectedFilter === tab.key;
+              return (
+                <TouchableOpacity
+                  key={tab.key}
+                  onPress={() => handleFilterChange(tab.key)}
+                  className={`px-5 py-3 rounded-2xl mr-3 flex-row items-center border ${
+                    isActive
+                      ? 'bg-[#14532D] border-[#14532D] shadow-xs'
+                      : 'bg-[#EDF5EE] border-[#CADDCB]'
                   }`}
+                  activeOpacity={0.7}
                 >
-                  {tab.label}
+                  <Text className="text-base mr-2">{tab.icon}</Text>
+                  <Text
+                    className={`text-sm font-black ${
+                      isActive ? 'text-white' : 'text-slate-700'
+                    }`}
+                  >
+                    {tab.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          {/* Main Content Area */}
+          {isLoading ? (
+            <View className="py-24 items-center justify-center">
+              <ActivityIndicator size="large" color="#14532D" />
+              <Text className="text-sm text-slate-500 font-bold mt-3">
+                Loading your verified activities...
+              </Text>
+            </View>
+          ) : errorMessage ? (
+            <View className="bg-white border border-red-100 rounded-3xl p-8 items-center my-4 shadow-sm">
+              <Text className="text-3xl mb-2">⚠️</Text>
+              <Text className="text-base font-bold text-slate-800 text-center">Unable to load activities</Text>
+              <Text className="text-sm text-slate-500 text-center mt-1 mb-5">{errorMessage}</Text>
+              <TouchableOpacity
+                onPress={() => fetchActivities(selectedFilter)}
+                className="bg-[#14532D] px-7 py-3.5 rounded-2xl shadow-sm"
+              >
+                <Text className="text-white text-sm font-bold">Retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : activities.length === 0 ? (
+            /* Proper Empty State Matching Reference System */
+            <View
+              style={{
+                shadowColor: '#14532D',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.04,
+                shadowRadius: 10,
+                elevation: 2,
+              }}
+              className="bg-[#F3F8F4] border border-[#CADDCB] rounded-3xl p-10 items-center my-4"
+            >
+              <View className="w-18 h-18 rounded-3xl bg-[#ECFDF5] border border-[#A7F3D0] justify-center items-center mb-4 p-4">
+                <Text className="text-4xl">📋</Text>
+              </View>
+              <Text className="text-2xl font-black text-[#14532D] text-center tracking-tight">
+                No Activities Found
+              </Text>
+              <Text className="text-sm text-slate-600 text-center mt-2 leading-relaxed max-w-sm font-medium">
+                {selectedFilter === 'all'
+                  ? "You haven't made any requests yet. Explore our services to get started!"
+                  : `You currently have no ${selectedFilter} records.`}
+              </Text>
+              <TouchableOpacity
+                onPress={() => router.replace('/home')}
+                className="mt-7 bg-[#14532D] px-7 py-4 rounded-2xl shadow-sm"
+                activeOpacity={0.8}
+              >
+                <Text className="text-white font-black text-sm uppercase tracking-wider">
+                  Explore Services
                 </Text>
               </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-
-        {/* Main Content Area */}
-        {isLoading ? (
-          <View className="py-20 items-center justify-center">
-            <ActivityIndicator size="large" color="#14532D" />
-            <Text className="text-xs text-slate-400 font-bold mt-3">
-              Loading your verified activities...
-            </Text>
-          </View>
-        ) : errorMessage ? (
-          <View className="bg-white border border-red-100 rounded-3xl p-6 items-center my-4 shadow-sm">
-            <Text className="text-2xl mb-2">⚠️</Text>
-            <Text className="text-sm font-bold text-slate-800 text-center">Unable to load activities</Text>
-            <Text className="text-xs text-slate-500 text-center mt-1 mb-4">{errorMessage}</Text>
-            <TouchableOpacity
-              onPress={() => fetchActivities(selectedFilter)}
-              className="bg-[#14532D] px-6 py-3 rounded-2xl shadow-sm"
-            >
-              <Text className="text-white text-xs font-bold">Retry</Text>
-            </TouchableOpacity>
-          </View>
-        ) : activities.length === 0 ? (
-          /* Proper Empty State Matching Reference System */
-          <View
-            style={{
-              shadowColor: '#14532D',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.04,
-              shadowRadius: 10,
-              elevation: 2,
-            }}
-            className="bg-[#F3F8F4] border border-[#CADDCB] rounded-3xl p-8 items-center my-4"
-          >
-            <View className="w-16 h-16 rounded-3xl bg-[#ECFDF5] border border-[#A7F3D0] justify-center items-center mb-4">
-              <Text className="text-3xl">📋</Text>
             </View>
-            <Text className="text-lg font-black text-[#14532D] text-center tracking-tight">
-              No Activities Found
-            </Text>
-            <Text className="text-xs text-slate-500 text-center mt-2 leading-relaxed max-w-xs font-medium">
-              {selectedFilter === 'all'
-                ? "You haven't made any requests yet. Explore our services to get started!"
-                : `You currently have no ${selectedFilter} records.`}
-            </Text>
-            <TouchableOpacity
-              onPress={() => router.replace('/home')}
-              className="mt-6 bg-[#14532D] px-6 py-3.5 rounded-2xl shadow-sm"
-              activeOpacity={0.8}
-            >
-              <Text className="text-white font-black text-xs uppercase tracking-wider">
-                Explore Services
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          /* Real User-Specific Activities List */
-          <View className="space-y-4">
-            {activities.map((act) => {
-              const meta = act.metadata || {};
-              const isUpcomingAppointment =
-                act.type === 'appointment' && act.status === 'Upcoming';
-              const isAppointment = act.type === 'appointment';
-              const apptCountdown =
-                isAppointment && meta.date
-                  ? calculateAppointmentCountdown(meta.date, meta.time)
-                  : null;
+          ) : (
+            /* Real User-Specific Activities List */
+            <View className="space-y-4">
+              {activities.map((act) => {
+                const meta = act.metadata || {};
+                const isUpcomingAppointment =
+                  act.type === 'appointment' && act.status === 'Upcoming';
+                const isAppointment = act.type === 'appointment';
+                const apptCountdown =
+                  isAppointment && meta.date
+                    ? calculateAppointmentCountdown(meta.date, meta.time)
+                    : null;
 
-              return (
-                <View
-                  key={act._id}
-                  style={{
-                    shadowColor: '#14532D',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.04,
-                    shadowRadius: 10,
-                    elevation: 2,
-                  }}
-                  className="bg-[#F3F8F4] border border-[#CADDCB] rounded-3xl p-6 mb-3.5"
-                >
-                  {/* Card Top Row: Token and Status Badge */}
-                  <View className="flex-row justify-between items-center mb-3">
-                    <Text className="text-[10px] font-black text-[#4B6350] uppercase tracking-widest">
-                      {act.token || act._id.slice(-8).toUpperCase()}
-                    </Text>
+                return (
+                  <View
+                    key={act._id}
+                    style={{
+                      shadowColor: '#14532D',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.04,
+                      shadowRadius: 10,
+                      elevation: 2,
+                    }}
+                    className="bg-[#F3F8F4] border border-[#CADDCB] rounded-3xl p-6 mb-4"
+                  >
+                    {/* Card Top Row: Token and Status Badge */}
+                    <View className="flex-row justify-between items-center mb-3.5">
+                      <Text className="text-xs font-black text-[#4B6350] uppercase tracking-widest">
+                        {act.token || act._id.slice(-8).toUpperCase()}
+                      </Text>
 
-                    <View className="flex-row items-center gap-1.5">
-                      {/* Dynamic Countdown Pill for Appointments */}
-                      {apptCountdown && act.status !== 'Cancelled' ? (
+                      <View className="flex-row items-center gap-2">
+                        {/* Dynamic Countdown Pill for Appointments */}
+                        {apptCountdown && act.status !== 'Cancelled' ? (
+                          <View
+                            style={{
+                              backgroundColor: apptCountdown.isToday
+                                ? '#FEE2E2'
+                                : apptCountdown.isTomorrow
+                                ? '#FEF3C7'
+                                : apptCountdown.isOverdue
+                                ? '#FEE2E2'
+                                : '#E0F2FE',
+                              borderColor: apptCountdown.isToday
+                                ? '#EF4444'
+                                : apptCountdown.isTomorrow
+                                ? '#F59E0B'
+                                : apptCountdown.isOverdue
+                                ? '#EF4444'
+                                : '#38BDF8',
+                            }}
+                            className="px-3 py-1 rounded-full border"
+                          >
+                            <Text
+                              style={{
+                                color: apptCountdown.isToday
+                                  ? '#DC2626'
+                                  : apptCountdown.isTomorrow
+                                  ? '#B45309'
+                                  : apptCountdown.isOverdue
+                                  ? '#DC2626'
+                                  : '#0369A1',
+                              }}
+                              className="text-xs font-black uppercase tracking-wide"
+                            >
+                              {apptCountdown.isToday
+                                ? '🚨 Today'
+                                : apptCountdown.isTomorrow
+                                ? '⏳ Tomorrow'
+                                : apptCountdown.countdownLabel}
+                            </Text>
+                          </View>
+                        ) : null}
+
                         <View
                           style={{
-                            backgroundColor: apptCountdown.isToday
-                              ? '#FEE2E2'
-                              : apptCountdown.isTomorrow
-                              ? '#FEF3C7'
-                              : apptCountdown.isOverdue
-                              ? '#FEE2E2'
-                              : '#E0F2FE',
-                            borderColor: apptCountdown.isToday
-                              ? '#EF4444'
-                              : apptCountdown.isTomorrow
-                              ? '#F59E0B'
-                              : apptCountdown.isOverdue
-                              ? '#EF4444'
-                              : '#38BDF8',
+                            backgroundColor: act.statusBg || '#ECFDF5',
+                            borderColor: act.statusColor ? `${act.statusColor}33` : '#A7F3D0',
                           }}
-                          className="px-2.5 py-0.5 rounded-full border"
+                          className="px-3 py-1 rounded-full border"
                         >
                           <Text
-                            style={{
-                              color: apptCountdown.isToday
-                                ? '#DC2626'
-                                : apptCountdown.isTomorrow
-                                ? '#B45309'
-                                : apptCountdown.isOverdue
-                                ? '#DC2626'
-                                : '#0369A1',
-                            }}
-                            className="text-[9px] font-black uppercase tracking-wide"
+                            style={{ color: act.statusColor || '#14532D' }}
+                            className="text-xs font-black uppercase tracking-wide"
                           >
-                            {apptCountdown.isToday
-                              ? '🚨 Today'
-                              : apptCountdown.isTomorrow
-                              ? '⏳ Tomorrow'
-                              : apptCountdown.countdownLabel}
+                            {act.status}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    {/* Title, Icon and Category */}
+                    <View className="flex-row items-center space-x-3 pb-3.5 border-b border-[#CADDCB]">
+                      <Text className="text-3xl mr-3">{act.icon || '📋'}</Text>
+                      <View className="flex-1">
+                        <Text className="text-xs font-black text-[#F97316] uppercase tracking-widest">
+                          {meta.deptName || meta.category || act.type.toUpperCase()}
+                        </Text>
+                        <Text className="text-lg font-black text-[#14532D] mt-1">
+                          {act.title}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Scheduling / Metadata Details */}
+                    <View className="py-3.5 space-y-2">
+                      {act.subtitle ? (
+                        <View className="flex-row justify-between mb-1.5">
+                          <Text className="text-sm font-semibold text-slate-500">Details</Text>
+                          <Text className="text-sm font-bold text-slate-800 text-right flex-1 ml-4">
+                            {act.subtitle}
                           </Text>
                         </View>
                       ) : null}
 
-                      <View
-                        style={{
-                          backgroundColor: act.statusBg || '#ECFDF5',
-                          borderColor: act.statusColor ? `${act.statusColor}33` : '#A7F3D0',
-                        }}
-                        className="px-2.5 py-0.5 rounded-full border"
-                      >
-                        <Text
-                          style={{ color: act.statusColor || '#14532D' }}
-                          className="text-[9px] font-black uppercase tracking-wide"
-                        >
-                          {act.status}
-                        </Text>
-                      </View>
+                      {meta.location ? (
+                        <View className="flex-row justify-between mb-1.5">
+                          <Text className="text-sm font-semibold text-slate-500">Location</Text>
+                          <Text className="text-sm font-bold text-slate-800 text-right flex-1 ml-4">
+                            {meta.location}
+                          </Text>
+                        </View>
+                      ) : null}
+
+                      {meta.date ? (
+                        <View className="flex-row justify-between mb-1.5">
+                          <Text className="text-sm font-semibold text-slate-500">Scheduled</Text>
+                          <Text className="text-sm font-bold text-slate-800">
+                            {meta.date} {meta.time ? `• ${meta.time}` : ''} (IST)
+                          </Text>
+                        </View>
+                      ) : null}
+
+                      {act.createdAt ? (
+                        <View className="flex-row justify-between mb-1.5">
+                          <Text className="text-sm font-semibold text-slate-500">Recorded</Text>
+                          <Text className="text-sm font-bold text-slate-700">
+                            {new Date(act.createdAt).toLocaleDateString('en-IN', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
+                          </Text>
+                        </View>
+                      ) : null}
                     </View>
-                  </View>
 
-                  {/* Title, Icon and Category */}
-                  <View className="flex-row items-center space-x-3 pb-3 border-b border-[#CADDCB]">
-                    <Text className="text-2xl mr-2.5">{act.icon || '📋'}</Text>
-                    <View className="flex-1">
-                      <Text className="text-[9px] font-black text-[#F97316] uppercase tracking-widest">
-                        {meta.deptName || meta.category || act.type.toUpperCase()}
-                      </Text>
-                      <Text className="text-sm font-black text-[#14532D] mt-0.5">
-                        {act.title}
-                      </Text>
-                    </View>
-                  </View>
+                    {/* Action Buttons Footer */}
+                    <View className="pt-3.5 border-t border-[#CADDCB] mt-1">
+                      {isUpcomingAppointment ? (
+                        <View className="w-full">
+                          <View className="flex-row justify-between mb-3">
+                            <TouchableOpacity
+                              onPress={() => handleViewDetails(act)}
+                              className="w-[48%] py-3.5 rounded-2xl justify-center items-center border border-[#CADDCB] bg-[#EDF5EE]"
+                              activeOpacity={0.7}
+                            >
+                              <Text className="text-[#14532D] text-sm font-black">View Gatepass</Text>
+                            </TouchableOpacity>
 
-                  {/* Scheduling / Metadata Details */}
-                  <View className="py-3 space-y-1.5">
-                    {act.subtitle ? (
-                      <View className="flex-row justify-between mb-1">
-                        <Text className="text-[10px] font-semibold text-slate-500">Details</Text>
-                        <Text className="text-[10px] font-bold text-slate-700 text-right flex-1 ml-4">
-                          {act.subtitle}
-                        </Text>
-                      </View>
-                    ) : null}
+                            <TouchableOpacity
+                              onPress={() => handleOpenReschedule(act)}
+                              className="w-[48%] py-3.5 rounded-2xl justify-center items-center bg-[#14532D]"
+                              activeOpacity={0.8}
+                            >
+                              <Text className="text-white text-sm font-black">Reschedule Slot 🗓️</Text>
+                            </TouchableOpacity>
+                          </View>
 
-                    {meta.location ? (
-                      <View className="flex-row justify-between mb-1">
-                        <Text className="text-[10px] font-semibold text-slate-500">Location</Text>
-                        <Text className="text-[10px] font-bold text-slate-700 text-right flex-1 ml-4">
-                          {meta.location}
-                        </Text>
-                      </View>
-                    ) : null}
-
-                    {meta.date ? (
-                      <View className="flex-row justify-between mb-1">
-                        <Text className="text-[10px] font-semibold text-slate-500">Scheduled</Text>
-                        <Text className="text-[10px] font-bold text-slate-700">
-                          {meta.date} {meta.time ? `• ${meta.time}` : ''} (IST)
-                        </Text>
-                      </View>
-                    ) : null}
-
-                    {act.createdAt ? (
-                      <View className="flex-row justify-between mb-1">
-                        <Text className="text-[10px] font-semibold text-slate-500">Recorded</Text>
-                        <Text className="text-[10px] font-bold text-slate-600">
-                          {new Date(act.createdAt).toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
-                        </Text>
-                      </View>
-                    ) : null}
-                  </View>
-
-                  {/* Action Buttons Footer */}
-                  <View className="pt-3 border-t border-[#CADDCB] mt-1">
-                    {isUpcomingAppointment ? (
-                      <View className="w-full">
-                        <View className="flex-row justify-between mb-2.5">
                           <TouchableOpacity
-                            onPress={() => handleViewDetails(act)}
-                            className="w-[48%] py-3 rounded-2xl justify-center items-center border border-[#CADDCB] bg-[#EDF5EE]"
+                            onPress={() => handleCancelAppointment(act._id, act.title)}
+                            className="w-full py-3 border border-red-200 bg-red-50/70 rounded-2xl justify-center items-center"
                             activeOpacity={0.7}
                           >
-                            <Text className="text-[#14532D] text-xs font-black">View Gatepass</Text>
-                          </TouchableOpacity>
-
-                          <TouchableOpacity
-                            onPress={() => handleOpenReschedule(act)}
-                            className="w-[48%] py-3 rounded-2xl justify-center items-center bg-[#14532D]"
-                            activeOpacity={0.8}
-                          >
-                            <Text className="text-white text-xs font-black">Reschedule Slot 🗓️</Text>
+                            <Text className="text-red-600 text-sm font-black">Cancel Appointment</Text>
                           </TouchableOpacity>
                         </View>
-
-                        <TouchableOpacity
-                          onPress={() => handleCancelAppointment(act._id, act.title)}
-                          className="w-full py-2.5 border border-red-200 bg-red-50/70 rounded-2xl justify-center items-center"
-                          activeOpacity={0.7}
-                        >
-                          <Text className="text-red-600 text-xs font-black">Cancel Appointment</Text>
-                        </TouchableOpacity>
-                      </View>
-                    ) : (
-                      <View className="flex-row justify-between">
-                        <TouchableOpacity
-                          onPress={() => handleViewDetails(act)}
-                          className={`py-3 rounded-2xl justify-center items-center ${
-                            act.type === 'grievance' || act.type === 'document' || act.type === 'scheme'
-                              ? 'w-[48%]'
-                              : 'w-full'
-                          } border border-[#CADDCB] bg-[#EDF5EE]`}
-                          activeOpacity={0.7}
-                        >
-                          <Text className="text-[#14532D] text-xs font-black">View Details</Text>
-                        </TouchableOpacity>
-
-                        {act.type === 'grievance' && (
+                      ) : (
+                        <View className="flex-row justify-between">
                           <TouchableOpacity
-                            onPress={() => {
-                              const tokenVal = meta.complaintId || (act.token ? act.token.replace('Token: ', '').trim() : '');
-                              router.push({
-                                pathname: '/grievances/track',
-                                params: { token: tokenVal },
-                              } as any);
-                            }}
-                            className="w-[48%] py-3 border border-amber-200 bg-amber-50/70 rounded-2xl justify-center items-center"
+                            onPress={() => handleViewDetails(act)}
+                            className={`py-3.5 rounded-2xl justify-center items-center ${
+                              act.type === 'grievance' || act.type === 'document' || act.type === 'scheme'
+                                ? 'w-[48%]'
+                                : 'w-full'
+                            } border border-[#CADDCB] bg-[#EDF5EE]`}
                             activeOpacity={0.7}
                           >
-                            <Text className="text-amber-800 text-xs font-black">Track Status →</Text>
+                            <Text className="text-[#14532D] text-sm font-black">View Details</Text>
                           </TouchableOpacity>
-                        )}
 
-                        {act.type === 'document' && (
-                          <TouchableOpacity
-                            onPress={() => router.push('/digilocker/documents' as any)}
-                            className="w-[48%] py-3 border border-indigo-200 bg-indigo-50/70 rounded-2xl justify-center items-center"
-                            activeOpacity={0.7}
-                          >
-                            <Text className="text-indigo-800 text-xs font-black">DigiLocker →</Text>
-                          </TouchableOpacity>
-                        )}
+                          {act.type === 'grievance' && (
+                            <TouchableOpacity
+                              onPress={() => {
+                                const tokenVal = meta.complaintId || (act.token ? act.token.replace('Token: ', '').trim() : '');
+                                router.push({
+                                  pathname: '/grievances/track',
+                                  params: { token: tokenVal },
+                                } as any);
+                              }}
+                              className="w-[48%] py-3.5 border border-amber-200 bg-amber-50/70 rounded-2xl justify-center items-center"
+                              activeOpacity={0.7}
+                            >
+                              <Text className="text-amber-800 text-sm font-black">Track Status →</Text>
+                            </TouchableOpacity>
+                          )}
 
-                        {act.type === 'scheme' && (
-                          <TouchableOpacity
-                            onPress={() => {
-                              if (meta.schemeId) {
-                                router.push({ pathname: '/schemes/details', params: { id: meta.schemeId } } as any);
-                              } else {
-                                router.push('/schemes/recommendations' as any);
-                              }
-                            }}
-                            className="w-[48%] py-3 border border-emerald-200 bg-emerald-50/70 rounded-2xl justify-center items-center"
-                            activeOpacity={0.7}
-                          >
-                            <Text className="text-emerald-800 text-xs font-black">View Portal →</Text>
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    )}
+                          {act.type === 'document' && (
+                            <TouchableOpacity
+                              onPress={() => router.push('/digilocker/documents' as any)}
+                              className="w-[48%] py-3.5 border border-indigo-200 bg-indigo-50/70 rounded-2xl justify-center items-center"
+                              activeOpacity={0.7}
+                            >
+                              <Text className="text-indigo-800 text-sm font-black">DigiLocker →</Text>
+                            </TouchableOpacity>
+                          )}
+
+                          {act.type === 'scheme' && (
+                            <TouchableOpacity
+                              onPress={() => {
+                                if (meta.schemeId) {
+                                  router.push({ pathname: '/schemes/details', params: { id: meta.schemeId } } as any);
+                                } else {
+                                  router.push('/schemes/recommendations' as any);
+                                }
+                              }}
+                              className="w-[48%] py-3.5 border border-emerald-200 bg-emerald-50/70 rounded-2xl justify-center items-center"
+                              activeOpacity={0.7}
+                            >
+                              <Text className="text-emerald-800 text-sm font-black">View Portal →</Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      )}
+                    </View>
                   </View>
-                </View>
-              );
-            })}
-          </View>
-        )}
+                );
+              })}
+            </View>
+          )}
 
-        {/* Return Button */}
-        <TouchableOpacity
-          onPress={() => router.replace('/home')}
-          className="mt-6 border border-[#CADDCB] py-4 rounded-2xl justify-center items-center bg-[#EDF5EE] shadow-xs"
-          activeOpacity={0.7}
-        >
-          <Text className="text-[#14532D] font-black text-xs uppercase tracking-wider">
-            Return to Dashboard
-          </Text>
-        </TouchableOpacity>
+          {/* Return Button */}
+          <TouchableOpacity
+            onPress={() => router.replace('/home')}
+            className="mt-7 border border-[#CADDCB] py-4 rounded-2xl justify-center items-center bg-[#EDF5EE] shadow-xs"
+            activeOpacity={0.7}
+          >
+            <Text className="text-[#14532D] font-black text-sm uppercase tracking-wider">
+              Return to Dashboard
+            </Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
       {/* RESCHEDULE APPOINTMENT MODAL */}

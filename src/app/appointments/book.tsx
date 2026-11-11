@@ -161,200 +161,204 @@ export default function BookAppointmentScreen() {
 
       {/* Header bar */}
       <View className="px-6 py-4 flex-row items-center border-b border-[#CADDCB] bg-[#EDF5EE]">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="w-11 h-11 rounded-2xl bg-[#E0EDE1] border border-[#CADDCB] justify-center items-center mr-3.5 shadow-xs"
-          activeOpacity={0.7}
-        >
-          <Text className="text-[#14532D] font-black text-lg">←</Text>
-        </TouchableOpacity>
-        <View className="flex-1">
-          <Text className="text-base font-black text-[#14532D]">Book Appointment</Text>
-          <Text className="text-[10px] font-bold text-[#4B6350] uppercase tracking-widest mt-0.5">
-            {dept.name} • Office Visit Slot
-          </Text>
+        <View className="max-w-4xl w-full mx-auto flex-row items-center">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="w-12 h-12 rounded-2xl bg-[#E0EDE1] border border-[#CADDCB] justify-center items-center mr-4 shadow-xs"
+            activeOpacity={0.7}
+          >
+            <Text className="text-[#14532D] font-black text-xl">←</Text>
+          </TouchableOpacity>
+          <View className="flex-1">
+            <Text className="text-xl font-black text-[#14532D]">Book Appointment</Text>
+            <Text className="text-xs font-bold text-[#4B6350] uppercase tracking-widest mt-0.5">
+              {dept.name} • Office Visit Slot
+            </Text>
+          </View>
         </View>
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 50 }}>
-        {/* Summary Card */}
-        <View
-          style={{
-            shadowColor: '#14532D',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.04,
-            shadowRadius: 10,
-            elevation: 2,
-          }}
-          className="bg-[#F3F8F4] border border-[#CADDCB] p-6 rounded-3xl mb-5"
-        >
-          <View className="flex-row items-center space-x-2.5">
-            <View className="w-14 h-14 bg-[#F0FDFA] border border-[#BAE6FD] rounded-2xl justify-center items-center mr-3">
-              <Text className="text-3xl">{dept.icon}</Text>
-            </View>
-            <View className="flex-1">
-              <Text className="text-[10px] font-black text-[#0284C7] uppercase tracking-wider">
-                {dept.name}
-              </Text>
-              <Text className="text-base font-black text-[#14532D] mt-0.5">
-                {selectedService}
-              </Text>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingBottom: 130 }}>
+        <View className="max-w-4xl w-full mx-auto">
+          {/* Summary Card */}
+          <View
+            style={{
+              shadowColor: '#14532D',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.04,
+              shadowRadius: 10,
+              elevation: 2,
+            }}
+            className="bg-[#F3F8F4] border border-[#CADDCB] p-6 rounded-3xl mb-5"
+          >
+            <View className="flex-row items-center space-x-2.5">
+              <View className="w-16 h-16 bg-[#F0FDFA] border border-[#BAE6FD] rounded-2xl justify-center items-center mr-4">
+                <Text className="text-3xl">{dept.icon}</Text>
+              </View>
+              <View className="flex-1">
+                <Text className="text-xs font-black text-[#0284C7] uppercase tracking-wider">
+                  {dept.name}
+                </Text>
+                <Text className="text-lg font-black text-[#14532D] mt-0.5">
+                  {selectedService}
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* Location Dropdown Picker */}
-        <View
-          style={{
-            shadowColor: '#14532D',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.04,
-            shadowRadius: 10,
-            elevation: 2,
-          }}
-          className="bg-[#F3F8F4] border border-[#CADDCB] p-6 rounded-3xl mb-4"
-        >
-          <Text className="text-xs font-black text-slate-700 mb-2.5">Preferred Office Location *</Text>
-          <TouchableOpacity
-            onPress={() => setShowLocationDropdown(!showLocationDropdown)}
-            className={`w-full px-4 py-3.5 bg-[#EDF5EE] border ${
-              errors.location ? 'border-red-400 bg-red-50/20' : 'border-[#CADDCB]'
-            } rounded-2xl flex-row justify-between items-center`}
-            activeOpacity={0.7}
+          {/* Location Dropdown Picker */}
+          <View
+            style={{
+              shadowColor: '#14532D',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.04,
+              shadowRadius: 10,
+              elevation: 2,
+            }}
+            className="bg-[#F3F8F4] border border-[#CADDCB] p-6 rounded-3xl mb-5"
           >
-            <Text className={`text-xs font-bold ${selectedLocation ? 'text-slate-900' : 'text-slate-400'}`}>
-              {selectedLocation || 'Select Office Location'}
-            </Text>
-            <Text className="text-slate-400 text-xs">{showLocationDropdown ? '▲' : '▼'}</Text>
-          </TouchableOpacity>
+            <Text className="text-sm font-black text-slate-800 mb-2.5">Preferred Office Location *</Text>
+            <TouchableOpacity
+              onPress={() => setShowLocationDropdown(!showLocationDropdown)}
+              className={`w-full px-4 py-4 bg-[#EDF5EE] border ${
+                errors.location ? 'border-red-400 bg-red-50/20' : 'border-[#CADDCB]'
+              } rounded-2xl flex-row justify-between items-center`}
+              activeOpacity={0.7}
+            >
+              <Text className={`text-sm font-bold ${selectedLocation ? 'text-slate-900' : 'text-slate-400'}`}>
+                {selectedLocation || 'Select Office Location'}
+              </Text>
+              <Text className="text-slate-500 text-sm">{showLocationDropdown ? '▲' : '▼'}</Text>
+            </TouchableOpacity>
 
-          {showLocationDropdown && (
-            <View className="bg-[#F3F8F4] border border-[#CADDCB] rounded-2xl mt-2 overflow-hidden shadow-xs">
-              {locations.map((loc, idx) => (
+            {showLocationDropdown && (
+              <View className="bg-[#F3F8F4] border border-[#CADDCB] rounded-2xl mt-2 overflow-hidden shadow-xs">
+                {locations.map((loc, idx) => (
+                  <TouchableOpacity
+                    key={idx}
+                    onPress={() => {
+                      setSelectedLocation(loc);
+                      setShowLocationDropdown(false);
+                      setErrors((prev) => ({ ...prev, location: '' }));
+                    }}
+                    className="px-4 py-3.5 border-b border-[#CADDCB] last:border-b-0"
+                    activeOpacity={0.7}
+                  >
+                    <Text className="text-sm font-bold text-slate-800">{loc}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+            {errors.location ? (
+              <Text className="text-red-500 text-xs ml-1 mt-1 font-semibold">{errors.location}</Text>
+            ) : null}
+          </View>
+
+          {/* Real Date Selection with IST Calendar & Validation */}
+          <CalendarDatePicker
+            selectedDate={selectedDate}
+            onSelectDate={(dt) => {
+              setSelectedDate(dt);
+              setErrors((prev) => ({ ...prev, date: '' }));
+            }}
+            errorMessage={errors.date}
+          />
+
+          {/* Select Time Slot Section */}
+          <View
+            style={{
+              shadowColor: '#14532D',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.04,
+              shadowRadius: 10,
+              elevation: 2,
+            }}
+            className="bg-[#F3F8F4] border border-[#CADDCB] p-6 rounded-3xl mb-5"
+          >
+            <Text className="text-sm font-black text-slate-800 mb-3">Available Time Slot *</Text>
+            <View className="flex-row flex-wrap">
+              {TIME_SLOTS.map((slot) => (
                 <TouchableOpacity
-                  key={idx}
+                  key={slot}
                   onPress={() => {
-                    setSelectedLocation(loc);
-                    setShowLocationDropdown(false);
-                    setErrors((prev) => ({ ...prev, location: '' }));
+                    setSelectedTime(slot);
+                    setErrors((prev) => ({ ...prev, time: '' }));
                   }}
-                  className="px-4 py-3 border-b border-[#CADDCB] last:border-b-0"
                   activeOpacity={0.7}
+                  className={`px-4.5 py-3 rounded-2xl border ${
+                    selectedTime === slot
+                      ? 'bg-[#14532D] border-[#14532D]'
+                      : 'bg-[#EDF5EE] border-[#CADDCB]'
+                  } mr-2.5 mb-2.5`}
                 >
-                  <Text className="text-xs font-bold text-slate-800">{loc}</Text>
+                  <Text
+                    className={`text-sm font-black ${
+                      selectedTime === slot ? 'text-white' : 'text-slate-700'
+                    }`}
+                  >
+                    {slot}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
-          )}
-          {errors.location ? (
-            <Text className="text-red-500 text-[11px] ml-1 mt-1 font-semibold">{errors.location}</Text>
-          ) : null}
-        </View>
-
-        {/* Real Date Selection with IST Calendar & Validation */}
-        <CalendarDatePicker
-          selectedDate={selectedDate}
-          onSelectDate={(dt) => {
-            setSelectedDate(dt);
-            setErrors((prev) => ({ ...prev, date: '' }));
-          }}
-          errorMessage={errors.date}
-        />
-
-        {/* Select Time Slot Section */}
-        <View
-          style={{
-            shadowColor: '#14532D',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.04,
-            shadowRadius: 10,
-            elevation: 2,
-          }}
-          className="bg-[#F3F8F4] border border-[#CADDCB] p-6 rounded-3xl mb-4"
-        >
-          <Text className="text-xs font-black text-slate-700 mb-3">Available Time Slot *</Text>
-          <View className="flex-row flex-wrap">
-            {TIME_SLOTS.map((slot) => (
-              <TouchableOpacity
-                key={slot}
-                onPress={() => {
-                  setSelectedTime(slot);
-                  setErrors((prev) => ({ ...prev, time: '' }));
-                }}
-                activeOpacity={0.7}
-                className={`px-4 py-2.5 rounded-2xl border ${
-                  selectedTime === slot
-                    ? 'bg-[#14532D] border-[#14532D]'
-                    : 'bg-[#EDF5EE] border-[#CADDCB]'
-                } mr-2 mb-2`}
-              >
-                <Text
-                  className={`text-xs font-black ${
-                    selectedTime === slot ? 'text-white' : 'text-slate-700'
-                  }`}
-                >
-                  {slot}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {errors.time ? (
+              <Text className="text-red-500 text-xs ml-1 mt-1 font-semibold">{errors.time}</Text>
+            ) : null}
           </View>
-          {errors.time ? (
-            <Text className="text-red-500 text-[11px] ml-1 mt-1 font-semibold">{errors.time}</Text>
-          ) : null}
-        </View>
 
-        {/* Purpose / Remarks (Optional) */}
-        <View
-          style={{
-            shadowColor: '#14532D',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.04,
-            shadowRadius: 10,
-            elevation: 2,
-          }}
-          className="bg-[#F3F8F4] border border-[#CADDCB] p-6 rounded-3xl mb-6"
-        >
-          <Text className="text-xs font-black text-slate-700 mb-2">Remarks or Specific Purpose (Optional)</Text>
-          <TextInput
-            placeholder="e.g. Bringing supporting documents for urgent address renewal"
-            placeholderTextColor="#94A3B8"
-            value={purpose}
-            onChangeText={setPurpose}
-            className="w-full px-4 py-3 bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl text-slate-900 font-medium text-xs"
-          />
-        </View>
-
-        {/* Notification & IST Timings Notice */}
-        <View className="bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl p-4 mb-6 flex-row items-center">
-          <Text className="text-xl mr-3">🔔</Text>
-          <View className="flex-1">
-            <Text className="text-xs font-black text-[#14532D]">Local Visit Reminders Active</Text>
-            <Text className="text-[11px] font-medium text-[#4B6350] mt-0.5 leading-4">
-              All dates follow Indian Standard Time (IST). You'll receive a local reminder on your visit day with your gatepass token.
-            </Text>
+          {/* Purpose / Remarks (Optional) */}
+          <View
+            style={{
+              shadowColor: '#14532D',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.04,
+              shadowRadius: 10,
+              elevation: 2,
+            }}
+            className="bg-[#F3F8F4] border border-[#CADDCB] p-6 rounded-3xl mb-6"
+          >
+            <Text className="text-sm font-black text-slate-800 mb-2">Remarks or Specific Purpose (Optional)</Text>
+            <TextInput
+              placeholder="e.g. Bringing supporting documents for urgent address renewal"
+              placeholderTextColor="#94A3B8"
+              value={purpose}
+              onChangeText={setPurpose}
+              className="w-full px-4 py-3.5 bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl text-slate-900 font-semibold text-base"
+            />
           </View>
-        </View>
 
-        {/* Confirm Booking CTA in Forest Green */}
-        <TouchableOpacity
-          onPress={handleConfirmBooking}
-          disabled={isBooking}
-          activeOpacity={0.85}
-          className="w-full py-4 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
-        >
-          {isBooking ? (
-            <View className="flex-row items-center space-x-2">
-              <ActivityIndicator size="small" color="#FFFFFF" />
-              <Text className="text-white text-xs font-bold uppercase tracking-wider ml-2">
-                Securing Appointment...
+          {/* Notification & IST Timings Notice */}
+          <View className="bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl p-4.5 mb-6 flex-row items-center">
+            <Text className="text-2xl mr-3">🔔</Text>
+            <View className="flex-1">
+              <Text className="text-sm font-black text-[#14532D]">Local Visit Reminders Active</Text>
+              <Text className="text-xs font-medium text-[#4B6350] mt-0.5 leading-5">
+                All dates follow Indian Standard Time (IST). You'll receive a local reminder on your visit day with your gatepass token.
               </Text>
             </View>
-          ) : (
-            <Text className="text-white text-xs font-black uppercase tracking-wider">
-              Confirm & Generate Gatepass Ticket →
-            </Text>
-          )}
-        </TouchableOpacity>
+          </View>
+
+          {/* Confirm Booking CTA in Forest Green */}
+          <TouchableOpacity
+            onPress={handleConfirmBooking}
+            disabled={isBooking}
+            activeOpacity={0.85}
+            className="w-full py-4.5 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
+          >
+            {isBooking ? (
+              <View className="flex-row items-center space-x-2">
+                <ActivityIndicator size="small" color="#FFFFFF" />
+                <Text className="text-white text-base font-black uppercase tracking-wider ml-2">
+                  Securing Appointment...
+                </Text>
+              </View>
+            ) : (
+              <Text className="text-white text-base font-black uppercase tracking-wider">
+                Confirm & Generate Gatepass Ticket →
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

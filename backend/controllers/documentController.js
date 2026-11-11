@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const mongoose = require('mongoose');
 const Document = require('../models/Document');
 const Activity = require('../models/Activity');
-const { memoryDocuments } = require('../config/memoryStore');
+const { memoryDocuments, memoryActivities, saveToDisk } = require('../config/memoryStore');
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
@@ -52,7 +52,19 @@ const getUserDocuments = async (req, res, next) => {
 const getDocumentById = async (req, res, next) => {
   try {
     const userId = (req.user._id || req.user.id).toString();
-    const document = await Document.findOne({ _id: req.params.id, userId });
+    let document = null;
+
+    if (isDbConnected()) {
+      try {
+        document = await Document.findOne({ _id: req.params.id, userId });
+      } catch (err) {}
+    }
+
+    if (!document) {
+      document = memoryDocuments.find(
+        (d) => (d._id?.toString() || d.id?.toString()) === req.params.id.toString() && (d.userId?.toString() || d.userId) === userId
+      );
+    }
 
     if (!document) {
       return res.status(404).json({
@@ -75,7 +87,7 @@ const getDocumentById = async (req, res, next) => {
 // @access  Private (Derived strictly from verified JWT)
 const uploadDocument = async (req, res, next) => {
   try {
-    const userId = req.user._id;
+    const userId = (req.user._id || req.user.id).toString();
     const { name, category, originalFilename, mimeType, base64Data, description } = req.body;
 
     if (!name || !originalFilename || !mimeType || !base64Data) {
@@ -105,7 +117,7 @@ const uploadDocument = async (req, res, next) => {
     }
 
     // Secure isolated user directory
-    const uploadDir = path.join(__dirname, '../uploads/documents', userId.toString());
+    const uploadDir = path.join(__dirname, '../uploads/documents', userId);
     await fs.promises.mkdir(uploadDir, { recursive: true });
 
     const ext = path.extname(originalFilename) || (cleanMime === 'application/pdf' ? '.pdf' : '.png');
@@ -126,6 +138,7 @@ const uploadDocument = async (req, res, next) => {
       status: 'Uploaded by you – Not officially verified',
       description: description ? description.trim() : '',
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     if (isDbConnected()) {
@@ -141,15 +154,16 @@ const uploadDocument = async (req, res, next) => {
       document = { _id: new mongoose.Types.ObjectId().toString(), ...docData };
       memoryDocuments.unshift(document);
     }
+    saveToDisk('documents');
 
-    // Also record an activity entry in Citizen History
+    // Also record an activity entry in Centralized Activity History
     try {
-      await Activity.create({
+      const actData = {
         userId,
         type: 'document',
         title: document.name,
         subtitle: `${document.category} • Uploaded Document`,
-        token: `DOC-${document._id.toString().slice(-6).toUpperCase()}`,
+        token: `Token: DOC-${(document._id || Date.now()).toString().slice(-6).toUpperCase()}`,
         status: 'Uploaded',
         statusColor: '#059669',
         statusBg: '#ECFDF5',
@@ -160,7 +174,21 @@ const uploadDocument = async (req, res, next) => {
           category: document.category,
           originalFilename: document.originalFilename,
         },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      if (isDbConnected()) {
+        try {
+          await Activity.create(actData);
+        } catch {}
+      }
+
+      memoryActivities.unshift({
+        _id: new mongoose.Types.ObjectId().toString(),
+        ...actData,
       });
+      saveToDisk('activities');
     } catch {
       // Continue even if activity log fails
     }
@@ -180,8 +208,20 @@ const uploadDocument = async (req, res, next) => {
 // @access  Private (Derived strictly from verified JWT)
 const getDocumentFile = async (req, res, next) => {
   try {
-    const userId = req.user._id;
-    const document = await Document.findOne({ _id: req.params.id, userId });
+    const userId = (req.user._id || req.user.id).toString();
+    let document = null;
+
+    if (isDbConnected()) {
+      try {
+        document = await Document.findOne({ _id: req.params.id, userId });
+      } catch {}
+    }
+
+    if (!document) {
+      document = memoryDocuments.find(
+        (d) => (d._id?.toString() || d.id?.toString()) === req.params.id.toString() && (d.userId?.toString() || d.userId) === userId
+      );
+    }
 
     if (!document) {
       return res.status(404).json({
@@ -200,22 +240,25 @@ const getDocumentFile = async (req, res, next) => {
     // Return base64 preview if requested
     if (req.query.base64 === 'true') {
       const fileBuffer = await fs.promises.readFile(document.filePath);
+      const base64Data = fileBuffer.toString('base64');
       return res.json({
         success: true,
-        base64: fileBuffer.toString('base64'),
-        mimeType: document.mimeType,
-        originalFilename: document.originalFilename,
+        document: {
+          _id: document._id,
+          name: document.name,
+          mimeType: document.mimeType,
+          originalFilename: document.originalFilename,
+        },
+        base64: `data:${document.mimeType};base64,${base64Data}`,
       });
     }
 
-    // Stream the file with secure attachment disposition
     res.setHeader('Content-Type', document.mimeType);
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="${encodeURIComponent(document.originalFilename)}"`
+      `inline; filename="${encodeURIComponent(document.originalFilename)}"`
     );
-    const fileStream = fs.createReadStream(document.filePath);
-    fileStream.pipe(res);
+    res.sendFile(path.resolve(document.filePath));
   } catch (error) {
     next(error);
   }
@@ -226,8 +269,20 @@ const getDocumentFile = async (req, res, next) => {
 // @access  Private (Derived strictly from verified JWT)
 const deleteDocument = async (req, res, next) => {
   try {
-    const userId = req.user._id;
-    const document = await Document.findOne({ _id: req.params.id, userId });
+    const userId = (req.user._id || req.user.id).toString();
+    let document = null;
+
+    if (isDbConnected()) {
+      try {
+        document = await Document.findOne({ _id: req.params.id, userId });
+      } catch {}
+    }
+
+    if (!document) {
+      document = memoryDocuments.find(
+        (d) => (d._id?.toString() || d.id?.toString()) === req.params.id.toString() && (d.userId?.toString() || d.userId) === userId
+      );
+    }
 
     if (!document) {
       return res.status(404).json({
@@ -237,7 +292,7 @@ const deleteDocument = async (req, res, next) => {
     }
 
     // Remove file from disk
-    if (fs.existsSync(document.filePath)) {
+    if (document.filePath && fs.existsSync(document.filePath)) {
       try {
         await fs.promises.unlink(document.filePath);
       } catch (err) {
@@ -246,13 +301,34 @@ const deleteDocument = async (req, res, next) => {
     }
 
     // Remove from MongoDB
-    await Document.deleteOne({ _id: document._id });
+    if (isDbConnected()) {
+      try {
+        await Document.deleteOne({ _id: document._id });
+      } catch {}
+    }
+
+    // Remove from memory/disk store
+    const docIdx = memoryDocuments.findIndex(
+      (d) => (d._id?.toString() || d.id?.toString()) === req.params.id.toString() && (d.userId?.toString() || d.userId) === userId
+    );
+    if (docIdx !== -1) {
+      memoryDocuments.splice(docIdx, 1);
+      saveToDisk('documents');
+    }
 
     // Remove matching activity
-    try {
-      await Activity.deleteMany({ userId, 'metadata.documentId': document._id });
-    } catch {
-      // Continue
+    if (isDbConnected()) {
+      try {
+        await Activity.deleteMany({ userId, 'metadata.documentId': document._id });
+      } catch {}
+    }
+
+    const actIdx = memoryActivities.findIndex(
+      (a) => (a.userId?.toString() || a.userId) === userId && a.metadata?.documentId?.toString() === document._id?.toString()
+    );
+    if (actIdx !== -1) {
+      memoryActivities.splice(actIdx, 1);
+      saveToDisk('activities');
     }
 
     res.json({
@@ -271,4 +347,3 @@ module.exports = {
   getDocumentFile,
   deleteDocument,
 };
-

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Grievance = require('../models/Grievance');
 const Activity = require('../models/Activity');
-const { memoryGrievances, memoryActivities } = require('../config/memoryStore');
+const { memoryGrievances, memoryActivities, saveToDisk } = require('../config/memoryStore');
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
@@ -1090,6 +1090,7 @@ const createGrievance = async (req, res) => {
       grievance = { _id: new mongoose.Types.ObjectId().toString(), ...grievanceData };
       memoryGrievances.unshift(grievance);
     }
+    saveToDisk('grievances');
 
     // Also record in centralized Activity history
     try {
@@ -1123,6 +1124,7 @@ const createGrievance = async (req, res) => {
       } else {
         memoryActivities.unshift({ _id: new mongoose.Types.ObjectId().toString(), ...actData });
       }
+      saveToDisk('activities');
     } catch (e) {
       console.warn('Activity sync note:', e.message);
     }
@@ -1257,9 +1259,12 @@ const updateGrievance = async (req, res) => {
           act.metadata.category = grievance.category;
         }
       }
+      saveToDisk('activities');
     } catch (e) {
       console.warn('Activity status sync note:', e.message);
     }
+
+    saveToDisk('grievances');
 
     res.json({
       success: true,
@@ -1320,8 +1325,13 @@ const deleteGrievance = async (req, res) => {
       const actIdx = memoryActivities.findIndex(
         (a) => (a.userId?.toString() || a.userId) === userId && a.metadata?.referenceNumber === refNum
       );
-      if (actIdx !== -1) memoryActivities.splice(actIdx, 1);
+      if (actIdx !== -1) {
+        memoryActivities.splice(actIdx, 1);
+        saveToDisk('activities');
+      }
     }
+
+    saveToDisk('grievances');
 
     res.json({
       success: true,

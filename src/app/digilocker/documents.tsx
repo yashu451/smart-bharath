@@ -188,213 +188,217 @@ export default function MyDocumentsScreen() {
 
       {/* Header bar */}
       <View className="px-6 py-4 flex-row items-center justify-between border-b border-[#CADDCB] bg-[#EDF5EE]">
-        <View className="flex-row items-center flex-1 mr-3">
-          <TouchableOpacity
-            onPress={() => router.replace('/home')}
-            className="w-11 h-11 rounded-2xl bg-[#E0EDE1] border border-[#CADDCB] justify-center items-center mr-3.5 shadow-xs"
-            activeOpacity={0.7}
-          >
-            <Text className="text-[#14532D] font-black text-lg">←</Text>
-          </TouchableOpacity>
-          <View className="flex-1">
-            <Text className="text-base font-black text-[#14532D]">My Documents</Text>
-            <Text className="text-[10px] font-bold text-[#4B6350] uppercase tracking-widest mt-0.5">
-              Personal Document Wallet
-            </Text>
+        <View className="max-w-5xl w-full mx-auto flex-row items-center justify-between">
+          <View className="flex-row items-center flex-1 mr-3">
+            <TouchableOpacity
+              onPress={() => router.replace('/home')}
+              className="w-12 h-12 rounded-2xl bg-[#E0EDE1] border border-[#CADDCB] justify-center items-center mr-4 shadow-xs"
+              activeOpacity={0.7}
+            >
+              <Text className="text-[#14532D] font-black text-xl">←</Text>
+            </TouchableOpacity>
+            <View className="flex-1">
+              <Text className="text-xl font-black text-[#14532D]">My Documents</Text>
+              <Text className="text-xs font-bold text-[#4B6350] uppercase tracking-widest mt-0.5">
+                Personal Document Wallet
+              </Text>
+            </View>
           </View>
-        </View>
 
-        {/* Add Document Header Shortcut */}
-        <TouchableOpacity
-          onPress={() => {
-            resetForm();
-            setShowAddModal(true);
-          }}
-          activeOpacity={0.8}
-          className="bg-[#14532D] px-4 py-2.5 rounded-2xl flex-row items-center shadow-xs"
-        >
-          <Text className="text-white text-xs font-black mr-1">+</Text>
-          <Text className="text-white text-xs font-black">Add Document</Text>
-        </TouchableOpacity>
+          {/* Add Document Header Shortcut */}
+          <TouchableOpacity
+            onPress={() => {
+              resetForm();
+              setShowAddModal(true);
+            }}
+            activeOpacity={0.8}
+            className="bg-[#14532D] px-5 py-3 rounded-2xl flex-row items-center shadow-xs"
+          >
+            <Text className="text-white text-sm font-black mr-1.5">+</Text>
+            <Text className="text-white text-sm font-black">Add Document</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 50 }}>
-        {/* Title Details with Orange Indicator */}
-        <View className="mb-5 flex-row items-center">
-          <View className="w-1 h-6 rounded-full bg-[#F97316] mr-3" />
-          <View>
-            <Text className="text-2xl font-black text-[#14532D] tracking-tight">Your Stored Files</Text>
-            <Text className="text-xs font-semibold text-slate-500 mt-0.5">
-              Secure private document storage for verified citizen services
-            </Text>
-          </View>
-        </View>
-
-        {/* Loading State */}
-        {isLoading ? (
-          <View className="py-20 items-center justify-center">
-            <ActivityIndicator size="large" color="#14532D" />
-            <Text className="text-xs text-slate-400 font-bold mt-3">
-              Loading your documents...
-            </Text>
-          </View>
-        ) : errorMessage ? (
-          /* Error State */
-          <View className="bg-white border border-red-200 rounded-3xl p-6 items-center my-4 shadow-sm">
-            <Text className="text-2xl mb-2">⚠️</Text>
-            <Text className="text-sm font-bold text-slate-900 text-center">Unable to load documents</Text>
-            <Text className="text-xs text-slate-500 text-center mt-1 mb-4">{errorMessage}</Text>
-            <TouchableOpacity
-              onPress={fetchDocuments}
-              className="bg-[#14532D] px-6 py-3 rounded-2xl shadow-sm"
-              activeOpacity={0.8}
-            >
-              <Text className="text-white text-xs font-bold uppercase tracking-wider">Retry</Text>
-            </TouchableOpacity>
-          </View>
-        ) : documents.length === 0 ? (
-          /* Empty State for New Users matching Reference */
-          <View
-            style={{
-              shadowColor: '#14532D',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.04,
-              shadowRadius: 10,
-              elevation: 2,
-            }}
-            className="bg-[#F3F8F4] border border-[#CADDCB] rounded-3xl p-8 items-center my-4"
-          >
-            <View className="w-16 h-16 rounded-3xl bg-[#EEF2FF] border border-[#C7D2FE] justify-center items-center mb-4">
-              <Text className="text-3xl">📁</Text>
-            </View>
-            <Text className="text-lg font-black text-[#14532D] text-center tracking-tight">
-              No documents available yet.
-            </Text>
-            <Text className="text-xs text-slate-500 text-center mt-2 leading-relaxed max-w-xs font-medium">
-              Upload your personal IDs, educational certificates, and documents from your device to access them securely anytime.
-            </Text>
-            <TouchableOpacity
-              onPress={() => {
-                resetForm();
-                setShowAddModal(true);
-              }}
-              activeOpacity={0.85}
-              className="mt-6 bg-[#14532D] px-6 py-3.5 rounded-2xl shadow-xs flex-row items-center"
-            >
-              <Text className="text-white font-black text-xs mr-2">+</Text>
-              <Text className="text-white font-black text-xs uppercase tracking-wider">
-                Add Document
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingBottom: 130 }}>
+        <View className="max-w-5xl w-full mx-auto">
+          {/* Title Details with Orange Indicator */}
+          <View className="mb-6 flex-row items-center">
+            <View className="w-1.5 h-8 rounded-full bg-[#F97316] mr-3.5" />
+            <View>
+              <Text className="text-3xl font-black text-[#14532D] tracking-tight">Your Stored Files</Text>
+              <Text className="text-base font-medium text-slate-600 mt-1">
+                Secure private document storage for verified citizen services
               </Text>
-            </TouchableOpacity>
+            </View>
           </View>
-        ) : (
-          /* Real User Documents List */
-          <View className="space-y-4">
-            {documents.map((doc) => {
-              const icon = CATEGORY_ICONS[doc.category] || '📁';
-              const isPdf = doc.mimeType === 'application/pdf';
 
-              return (
-                <View
-                  key={doc._id}
-                  style={{
-                    shadowColor: '#14532D',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.04,
-                    shadowRadius: 10,
-                    elevation: 2,
-                  }}
-                  className="bg-[#F3F8F4] border border-[#CADDCB] rounded-3xl p-6 mb-3.5"
-                >
-                  {/* Top Row: Category and Status Badge */}
-                  <View className="flex-row justify-between items-center mb-3">
-                    <View className="bg-[#EEF2FF] border border-[#C7D2FE] px-3 py-1 rounded-xl flex-row items-center">
-                      <Text className="text-xs mr-1">{icon}</Text>
-                      <Text className="text-[10px] font-black text-[#6366F1] uppercase tracking-wider">
-                        {doc.category}
-                      </Text>
+          {/* Loading State */}
+          {isLoading ? (
+            <View className="py-24 items-center justify-center">
+              <ActivityIndicator size="large" color="#14532D" />
+              <Text className="text-sm text-slate-500 font-bold mt-3">
+                Loading your documents...
+              </Text>
+            </View>
+          ) : errorMessage ? (
+            /* Error State */
+            <View className="bg-white border border-red-200 rounded-3xl p-8 items-center my-4 shadow-sm">
+              <Text className="text-3xl mb-2">⚠️</Text>
+              <Text className="text-base font-bold text-slate-900 text-center">Unable to load documents</Text>
+              <Text className="text-sm text-slate-500 text-center mt-1 mb-5">{errorMessage}</Text>
+              <TouchableOpacity
+                onPress={fetchDocuments}
+                className="bg-[#14532D] px-7 py-3.5 rounded-2xl shadow-sm"
+                activeOpacity={0.8}
+              >
+                <Text className="text-white text-sm font-bold uppercase tracking-wider">Retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : documents.length === 0 ? (
+            /* Empty State for New Users matching Reference */
+            <View
+              style={{
+                shadowColor: '#14532D',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.04,
+                shadowRadius: 10,
+                elevation: 2,
+              }}
+              className="bg-[#F3F8F4] border border-[#CADDCB] rounded-3xl p-10 items-center my-4"
+            >
+              <View className="w-18 h-18 rounded-3xl bg-[#EEF2FF] border border-[#C7D2FE] justify-center items-center mb-4 p-4">
+                <Text className="text-4xl">📁</Text>
+              </View>
+              <Text className="text-2xl font-black text-[#14532D] text-center tracking-tight">
+                No documents available yet.
+              </Text>
+              <Text className="text-sm text-slate-600 text-center mt-2 leading-relaxed max-w-sm font-medium">
+                Upload your personal IDs, educational certificates, and documents from your device to access them securely anytime.
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  resetForm();
+                  setShowAddModal(true);
+                }}
+                activeOpacity={0.85}
+                className="mt-7 bg-[#14532D] px-7 py-4 rounded-2xl shadow-xs flex-row items-center"
+              >
+                <Text className="text-white font-black text-sm mr-2">+</Text>
+                <Text className="text-white font-black text-sm uppercase tracking-wider">
+                  Add Document
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            /* Real User Documents List */
+            <View className="space-y-4">
+              {documents.map((doc) => {
+                const icon = CATEGORY_ICONS[doc.category] || '📁';
+                const isPdf = doc.mimeType === 'application/pdf';
+
+                return (
+                  <View
+                    key={doc._id}
+                    style={{
+                      shadowColor: '#14532D',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.04,
+                      shadowRadius: 10,
+                      elevation: 2,
+                    }}
+                    className="bg-[#F3F8F4] border border-[#CADDCB] rounded-3xl p-6 mb-4"
+                  >
+                    {/* Top Row: Category and Status Badge */}
+                    <View className="flex-row justify-between items-center mb-3.5">
+                      <View className="bg-[#EEF2FF] border border-[#C7D2FE] px-3.5 py-1.5 rounded-xl flex-row items-center">
+                        <Text className="text-sm mr-1.5">{icon}</Text>
+                        <Text className="text-xs font-black text-[#6366F1] uppercase tracking-wider">
+                          {doc.category}
+                        </Text>
+                      </View>
+
+                      {/* Status Pill */}
+                      <View className="bg-[#FFFBEB] border border-[#FDE68A] px-3 py-1 rounded-full">
+                        <Text className="text-xs font-bold text-amber-800">
+                          Uploaded by you – Not officially verified
+                        </Text>
+                      </View>
                     </View>
 
-                    {/* Status Pill */}
-                    <View className="bg-[#FFFBEB] border border-[#FDE68A] px-2.5 py-0.5 rounded-full">
-                      <Text className="text-[9px] font-bold text-amber-800">
-                        Uploaded by you – Not officially verified
+                    {/* Document Name and Metadata */}
+                    <View className="pb-3.5 border-b border-[#CADDCB]">
+                      <Text className="text-lg font-black text-[#14532D] leading-snug">
+                        {doc.name}
                       </Text>
+                      <Text className="text-sm text-slate-600 font-medium mt-1">
+                        File: {doc.originalFilename} • {formatFileSize(doc.size)}
+                      </Text>
+                      {doc.description ? (
+                        <Text className="text-sm text-slate-700 font-medium mt-2 leading-relaxed">
+                          {doc.description}
+                        </Text>
+                      ) : null}
+                    </View>
+
+                    {/* Scheduling and Date Row */}
+                    <View className="flex-row justify-between items-center py-3.5">
+                      <Text className="text-xs font-bold text-[#4B6350] uppercase tracking-wider">
+                        Uploaded on{' '}
+                        {new Date(doc.createdAt).toLocaleDateString('en-IN', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </Text>
+                      <View className="flex-row items-center">
+                        <View className="w-2 h-2 rounded-full bg-[#10B981] mr-2" />
+                        <Text className="text-xs font-black text-slate-600 uppercase">
+                          {isPdf ? 'PDF File' : 'Image File'}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Actions Footer */}
+                    <View className="flex-row justify-between pt-3.5 border-t border-[#CADDCB]">
+                      <TouchableOpacity
+                        onPress={() => {
+                          router.push({
+                            pathname: '/digilocker/details',
+                            params: { id: doc._id },
+                          } as any);
+                        }}
+                        activeOpacity={0.7}
+                        className="w-[48%] py-3.5 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
+                      >
+                        <Text className="text-white text-sm font-black">View / Download</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={() => handleDelete(doc._id, doc.name)}
+                        activeOpacity={0.7}
+                        className="w-[48%] py-3.5 border border-red-200 bg-red-50/70 rounded-2xl justify-center items-center"
+                      >
+                        <Text className="text-red-600 text-sm font-black">Delete</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
+                );
+              })}
+            </View>
+          )}
 
-                  {/* Document Name and Metadata */}
-                  <View className="pb-3 border-b border-[#CADDCB]">
-                    <Text className="text-base font-black text-[#14532D] leading-snug">
-                      {doc.name}
-                    </Text>
-                    <Text className="text-xs text-slate-500 font-medium mt-1">
-                      File: {doc.originalFilename} • {formatFileSize(doc.size)}
-                    </Text>
-                    {doc.description ? (
-                      <Text className="text-xs text-slate-600 font-medium mt-1.5 leading-relaxed">
-                        {doc.description}
-                      </Text>
-                    ) : null}
-                  </View>
-
-                  {/* Scheduling and Date Row */}
-                  <View className="flex-row justify-between items-center py-3">
-                    <Text className="text-[10px] font-bold text-[#4B6350] uppercase tracking-wider">
-                      Uploaded on{' '}
-                      {new Date(doc.createdAt).toLocaleDateString('en-IN', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </Text>
-                    <View className="flex-row items-center">
-                      <View className="w-2 h-2 rounded-full bg-[#10B981] mr-1.5" />
-                      <Text className="text-[10px] font-black text-slate-600 uppercase">
-                        {isPdf ? 'PDF File' : 'Image File'}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Actions Footer */}
-                  <View className="flex-row justify-between pt-3 border-t border-[#CADDCB]">
-                    <TouchableOpacity
-                      onPress={() => {
-                        router.push({
-                          pathname: '/digilocker/details',
-                          params: { id: doc._id },
-                        } as any);
-                      }}
-                      activeOpacity={0.7}
-                      className="w-[48%] py-3 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
-                    >
-                      <Text className="text-white text-xs font-black">View / Download</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      onPress={() => handleDelete(doc._id, doc.name)}
-                      activeOpacity={0.7}
-                      className="w-[48%] py-3 border border-red-200 bg-red-50/70 rounded-2xl justify-center items-center"
-                    >
-                      <Text className="text-red-600 text-xs font-black">Delete</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-        )}
-
-        {/* Return Button */}
-        <TouchableOpacity
-          onPress={() => router.replace('/home')}
-          className="mt-6 border border-[#CADDCB] py-4 rounded-2xl justify-center items-center bg-[#EDF5EE] shadow-xs"
-          activeOpacity={0.7}
-        >
-          <Text className="text-[#14532D] font-black text-xs uppercase tracking-wider">
-            Return to Dashboard
-          </Text>
-        </TouchableOpacity>
+          {/* Return Button */}
+          <TouchableOpacity
+            onPress={() => router.replace('/home')}
+            className="mt-7 border border-[#CADDCB] py-4 rounded-2xl justify-center items-center bg-[#EDF5EE] shadow-xs"
+            activeOpacity={0.7}
+          >
+            <Text className="text-[#14532D] font-black text-sm uppercase tracking-wider">
+              Return to Dashboard
+            </Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
       {/* ADD DOCUMENT MODAL */}

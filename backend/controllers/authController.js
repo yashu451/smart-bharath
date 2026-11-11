@@ -8,7 +8,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const User = require('../models/User');
-const { memoryUsers } = require('../config/memoryStore');
+const { memoryUsers, saveToDisk } = require('../config/memoryStore');
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
@@ -96,6 +96,7 @@ const register = async (req, res, next) => {
         pin: hashedPin,
       });
       memoryUsers.push(user.toObject ? user.toObject() : user);
+      saveToDisk('users');
     } else {
       user = {
         _id: new mongoose.Types.ObjectId().toString(),
@@ -108,6 +109,7 @@ const register = async (req, res, next) => {
         isAadhaarVerified: false,
       };
       memoryUsers.push(user);
+      saveToDisk('users');
     }
 
     const token = generateToken(user);

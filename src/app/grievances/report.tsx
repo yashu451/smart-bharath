@@ -181,38 +181,41 @@ export default function GrievanceGuidanceScreen() {
 
       {/* Header bar */}
       <View className="px-6 py-4 flex-row items-center border-b border-[#CADDCB] bg-[#EDF5EE]">
-        <TouchableOpacity
-          onPress={() => (currentStep > 1 && !isDirectSave ? setCurrentStep(currentStep - 1) : router.back())}
-          className="w-11 h-11 rounded-2xl bg-[#E0EDE1] border border-[#CADDCB] justify-center items-center mr-3.5 shadow-xs"
-          activeOpacity={0.7}
-        >
-          <Text className="text-[#14532D] font-black text-lg">←</Text>
-        </TouchableOpacity>
-        <View className="flex-1">
-          <Text className="text-base font-black text-[#14532D]">
-            {currentStep === 1
-              ? 'Complaint Guidance'
-              : currentStep === 2
-              ? 'Official Portal Recommendation'
-              : 'Save Complaint Reference'}
-          </Text>
-          <Text className="text-[10px] font-bold text-[#4B6350] uppercase tracking-widest mt-0.5">
-            Step {currentStep} of 3 • Citizen Guidance System
-          </Text>
+        <View className="max-w-4xl w-full mx-auto flex-row items-center">
+          <TouchableOpacity
+            onPress={() => (currentStep > 1 && !isDirectSave ? setCurrentStep(currentStep - 1) : router.back())}
+            className="w-12 h-12 rounded-2xl bg-[#E0EDE1] border border-[#CADDCB] justify-center items-center mr-4 shadow-xs"
+            activeOpacity={0.7}
+          >
+            <Text className="text-[#14532D] font-black text-xl">←</Text>
+          </TouchableOpacity>
+          <View className="flex-1">
+            <Text className="text-xl font-black text-[#14532D]">
+              {currentStep === 1
+                ? 'Complaint Guidance'
+                : currentStep === 2
+                ? 'Official Portal Recommendation'
+                : 'Save Complaint Reference'}
+            </Text>
+            <Text className="text-xs font-bold text-[#4B6350] uppercase tracking-widest mt-0.5">
+              Step {currentStep} of 3 • Citizen Guidance System
+            </Text>
+          </View>
         </View>
       </View>
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 60 }}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingBottom: 130 }}>
+          <View className="max-w-4xl w-full mx-auto">
           {/* STEP 1: COMPLAINT DETAILS & LOCATION FORM */}
           {currentStep === 1 && (
             <View>
               {/* Important Explanatory Banner */}
-              <View className="bg-[#EDF5EE] border border-[#CADDCB] p-4 rounded-3xl mb-5">
-                <Text className="text-xs font-black text-[#14532D] mb-1">
+              <View className="bg-[#EDF5EE] border border-[#CADDCB] p-5 rounded-3xl mb-6">
+                <Text className="text-sm font-black text-[#14532D] mb-1.5">
                   How Smart Bharat Helps You:
                 </Text>
-                <Text className="text-[11px] text-slate-600 leading-relaxed font-medium">
+                <Text className="text-xs text-slate-700 leading-relaxed font-medium">
                   We determine whether your issue falls under Central Government (CPGRAMS), State (Janaspandana, CM Helpline), or Local Municipality (BBMP, GCC), show filing steps, and provide the direct official portal link.
                 </Text>
               </View>
@@ -226,11 +229,11 @@ export default function GrievanceGuidanceScreen() {
                   shadowRadius: 10,
                   elevation: 2,
                 }}
-                className="bg-[#F3F8F4] border border-[#CADDCB] rounded-3xl p-6 mb-5"
+                className="bg-[#F3F8F4] border border-[#CADDCB] rounded-3xl p-7 mb-6"
               >
                 {/* 1. State Selector */}
-                <View className="mb-4">
-                  <Text className="text-xs font-black text-[#14532D] uppercase tracking-wider mb-2">
+                <View className="mb-5">
+                  <Text className="text-sm font-black text-[#14532D] uppercase tracking-wider mb-2.5">
                     1. Select State or Central Jurisdiction *
                   </Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
@@ -243,14 +246,14 @@ export default function GrievanceGuidanceScreen() {
                             setSelectedState(st.value);
                             setDistrict(st.popularDistricts[0] || '');
                           }}
-                          className={`px-3.5 py-2 rounded-2xl mr-2 border ${
+                          className={`px-4 py-2.5 rounded-2xl mr-2.5 border ${
                             isSelected
                               ? 'bg-[#14532D] border-[#14532D]'
                               : 'bg-[#EDF5EE] border-[#CADDCB]'
                           }`}
                         >
                           <Text
-                            className={`text-xs font-black ${
+                            className={`text-sm font-black ${
                               isSelected ? 'text-white' : 'text-[#14532D]'
                             }`}
                           >
@@ -263,13 +266,13 @@ export default function GrievanceGuidanceScreen() {
                 </View>
 
                 {/* 2. District & City */}
-                <View className="mb-4">
-                  <Text className="text-xs font-black text-[#14532D] uppercase tracking-wider mb-2">
+                <View className="mb-5">
+                  <Text className="text-sm font-black text-[#14532D] uppercase tracking-wider mb-2.5">
                     2. Select District / City *
                   </Text>
                   {/* Quick Select District Pills for the Selected State */}
                   {currentStateObj.popularDistricts && currentStateObj.popularDistricts.length > 0 && (
-                    <View className="mb-2.5">
+                    <View className="mb-3">
                       <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
                         {currentStateObj.popularDistricts.map((d) => {
                           const isSelected = district.toLowerCase() === d.toLowerCase();
@@ -277,14 +280,14 @@ export default function GrievanceGuidanceScreen() {
                             <TouchableOpacity
                               key={d}
                               onPress={() => setDistrict(d)}
-                              className={`px-3 py-1.5 rounded-xl mr-2 border ${
+                              className={`px-3.5 py-2 rounded-xl mr-2.5 border ${
                                 isSelected
                                   ? 'bg-[#14532D] border-[#14532D]'
                                   : 'bg-[#EDF5EE] border-[#CADDCB]'
                               }`}
                             >
                               <Text
-                                className={`text-[11px] font-bold ${
+                                className={`text-xs font-bold ${
                                   isSelected ? 'text-white' : 'text-[#14532D]'
                                 }`}
                               >
@@ -301,13 +304,13 @@ export default function GrievanceGuidanceScreen() {
                     placeholderTextColor="#94A3B8"
                     value={district}
                     onChangeText={setDistrict}
-                    className="w-full px-4 py-3 bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl text-slate-900 font-semibold text-xs"
+                    className="w-full px-4 py-3.5 bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl text-slate-900 font-semibold text-base"
                   />
                 </View>
 
                 {/* 3. Category Selector */}
-                <View className="mb-4">
-                  <Text className="text-xs font-black text-[#14532D] uppercase tracking-wider mb-2">
+                <View className="mb-5">
+                  <Text className="text-sm font-black text-[#14532D] uppercase tracking-wider mb-2.5">
                     3. Complaint Category *
                   </Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
@@ -317,15 +320,15 @@ export default function GrievanceGuidanceScreen() {
                         <TouchableOpacity
                           key={c.id}
                           onPress={() => setCategory(c.label)}
-                          className={`px-3 py-2 rounded-2xl mr-2 border flex-row items-center ${
+                          className={`px-4 py-2.5 rounded-2xl mr-2.5 border flex-row items-center ${
                             isSelected
                               ? 'bg-[#14532D] border-[#14532D]'
                               : 'bg-[#EDF5EE] border-[#CADDCB]'
                           }`}
                         >
-                          <Text className="text-xs mr-1.5">{c.icon}</Text>
+                          <Text className="text-base mr-2">{c.icon}</Text>
                           <Text
-                            className={`text-[11px] font-black ${
+                            className={`text-sm font-black ${
                               isSelected ? 'text-white' : 'text-[#14532D]'
                             }`}
                           >
@@ -338,8 +341,8 @@ export default function GrievanceGuidanceScreen() {
                 </View>
 
                 {/* 4. Title */}
-                <View className="mb-4">
-                  <Text className="text-xs font-black text-[#14532D] uppercase tracking-wider mb-1.5">
+                <View className="mb-5">
+                  <Text className="text-sm font-black text-[#14532D] uppercase tracking-wider mb-2">
                     4. Brief Title *
                   </Text>
                   <TextInput
@@ -350,16 +353,16 @@ export default function GrievanceGuidanceScreen() {
                       setTitle(t);
                       if (errors.title) setErrors({ ...errors, title: '' });
                     }}
-                    className={`w-full px-4 py-3 bg-[#EDF5EE] border ${
+                    className={`w-full px-4 py-3.5 bg-[#EDF5EE] border ${
                       errors.title ? 'border-red-400' : 'border-[#CADDCB]'
-                    } rounded-2xl text-slate-900 font-bold text-xs`}
+                    } rounded-2xl text-slate-900 font-bold text-base`}
                   />
-                  {errors.title ? <Text className="text-red-500 text-[10px] mt-1 ml-1 font-bold">{errors.title}</Text> : null}
+                  {errors.title ? <Text className="text-red-500 text-xs mt-1 ml-1 font-bold">{errors.title}</Text> : null}
                 </View>
 
                 {/* 5. Exact Location */}
-                <View className="mb-4">
-                  <Text className="text-xs font-black text-[#14532D] uppercase tracking-wider mb-1.5">
+                <View className="mb-5">
+                  <Text className="text-sm font-black text-[#14532D] uppercase tracking-wider mb-2">
                     5. Exact Street Location / Ward / Landmark
                   </Text>
                   <TextInput
@@ -367,13 +370,13 @@ export default function GrievanceGuidanceScreen() {
                     placeholderTextColor="#94A3B8"
                     value={exactLocation}
                     onChangeText={setExactLocation}
-                    className="w-full px-4 py-3 bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl text-slate-900 font-semibold text-xs"
+                    className="w-full px-4 py-3.5 bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl text-slate-900 font-semibold text-base"
                   />
                 </View>
 
                 {/* 6. Problem Description */}
-                <View className="mb-2">
-                  <Text className="text-xs font-black text-[#14532D] uppercase tracking-wider mb-1.5">
+                <View className="mb-3">
+                  <Text className="text-sm font-black text-[#14532D] uppercase tracking-wider mb-2">
                     6. Problem Description *
                   </Text>
                   <TextInput
@@ -387,12 +390,12 @@ export default function GrievanceGuidanceScreen() {
                     multiline
                     numberOfLines={4}
                     textAlignVertical="top"
-                    className={`w-full px-4 py-3 bg-[#EDF5EE] border ${
+                    className={`w-full px-4 py-3.5 bg-[#EDF5EE] border ${
                       errors.description ? 'border-red-400' : 'border-[#CADDCB]'
-                    } rounded-2xl text-slate-900 font-medium text-xs`}
-                    style={{ minHeight: 90 }}
+                    } rounded-2xl text-slate-900 font-medium text-base`}
+                    style={{ minHeight: 110 }}
                   />
-                  {errors.description ? <Text className="text-red-500 text-[10px] mt-1 ml-1 font-bold">{errors.description}</Text> : null}
+                  {errors.description ? <Text className="text-red-500 text-xs mt-1 ml-1 font-bold">{errors.description}</Text> : null}
                 </View>
               </View>
 
@@ -401,17 +404,17 @@ export default function GrievanceGuidanceScreen() {
                 onPress={handleAnalyzeAndGuide}
                 disabled={isLoadingGuidance}
                 activeOpacity={0.85}
-                className="w-full py-4 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
+                className="w-full py-4.5 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
               >
                 {isLoadingGuidance ? (
                   <View className="flex-row items-center">
                     <ActivityIndicator size="small" color="#FFFFFF" />
-                    <Text className="text-white text-xs font-black uppercase tracking-wider ml-2">
+                    <Text className="text-white text-base font-black uppercase tracking-wider ml-2">
                       Identifying Official Portal...
                     </Text>
                   </View>
                 ) : (
-                  <Text className="text-white text-xs font-black uppercase tracking-wider">
+                  <Text className="text-white text-base font-black uppercase tracking-wider">
                     Identify Official Portal & Guidance →
                   </Text>
                 )}
@@ -431,19 +434,19 @@ export default function GrievanceGuidanceScreen() {
                   shadowRadius: 16,
                   elevation: 3,
                 }}
-                className="bg-[#F3F8F4] border border-[#CADDCB] rounded-3xl p-6 mb-5"
+                className="bg-[#F3F8F4] border border-[#CADDCB] rounded-3xl p-7 mb-6"
               >
                 {/* Authority Header & Jurisdiction Level */}
-                <View className="flex-row items-center gap-2 mb-3 flex-wrap">
+                <View className="flex-row items-center gap-2 mb-3.5 flex-wrap">
                   <View
-                    className={`px-3.5 py-1.5 rounded-xl self-start ${
+                    className={`px-4 py-1.5 rounded-xl self-start ${
                       guidance.isDistrictSpecific
                         ? 'bg-[#ECFDF5] border border-[#A7F3D0]'
                         : 'bg-[#FFF7ED] border border-[#FED7AA]'
                     }`}
                   >
                     <Text
-                      className={`text-[10px] font-black uppercase tracking-wider ${
+                      className={`text-xs font-black uppercase tracking-wider ${
                         guidance.isDistrictSpecific ? 'text-[#10B981]' : 'text-[#D97706]'
                       }`}
                     >
@@ -454,54 +457,54 @@ export default function GrievanceGuidanceScreen() {
                   </View>
                 </View>
 
-                <Text className="text-lg font-black text-[#14532D] leading-snug mb-1">
+                <Text className="text-2xl font-black text-[#14532D] leading-snug mb-1">
                   {guidance.authorityName}
                 </Text>
 
-                <View className="bg-[#EDF5EE] p-3.5 rounded-2xl border border-[#CADDCB] my-3">
-                  <Text className="text-[10px] font-black text-[#4B6350] uppercase tracking-widest mb-1">
+                <View className="bg-[#EDF5EE] p-4 rounded-2xl border border-[#CADDCB] my-4">
+                  <Text className="text-xs font-black text-[#4B6350] uppercase tracking-widest mb-1.5">
                     Recommended Official Portal:
                   </Text>
-                  <Text className="text-sm font-black text-[#14532D]">
+                  <Text className="text-lg font-black text-[#14532D]">
                     {guidance.portalName}
                   </Text>
-                  <Text className="text-[11px] text-[#0284C7] font-bold mt-1">
+                  <Text className="text-xs text-[#0284C7] font-bold mt-1">
                     Official URL: {guidance.portalUrl}
                   </Text>
                 </View>
 
                 {/* Why Appropriate */}
                 <View className="mb-4">
-                  <Text className="text-xs font-black text-[#14532D] mb-1">
+                  <Text className="text-sm font-black text-[#14532D] mb-1.5">
                     Why this portal is appropriate:
                   </Text>
-                  <Text className="text-xs text-slate-600 leading-relaxed font-medium">
+                  <Text className="text-sm text-slate-700 leading-relaxed font-medium">
                     {guidance.whyAppropriate}
                   </Text>
                 </View>
 
                 {/* Official Timeline Banner */}
-                <View className="bg-[#FFFBEB] border border-[#FDE68A] p-3.5 rounded-2xl mb-4">
+                <View className="bg-[#FFFBEB] border border-[#FDE68A] p-4 rounded-2xl mb-4.5">
                   <View className="flex-row items-center mb-1">
-                    <Text className="text-base mr-2">⏱️</Text>
-                    <Text className="text-xs font-black text-amber-900">
+                    <Text className="text-lg mr-2">⏱️</Text>
+                    <Text className="text-sm font-black text-amber-900">
                       Published Official Timeline: {guidance.expectedTimelineDays} Days
                     </Text>
                   </View>
-                  <Text className="text-[11px] text-amber-800 font-medium leading-relaxed">
+                  <Text className="text-xs text-amber-800 font-medium leading-relaxed">
                     {guidance.officialTimelineNotice}
                   </Text>
                 </View>
 
                 {/* Official Helpline */}
                 {guidance.helpline ? (
-                  <View className="bg-[#EEF2FF] border border-[#C7D2FE] p-3 rounded-2xl mb-4 flex-row items-center">
-                    <Text className="text-base mr-2.5">📞</Text>
+                  <View className="bg-[#EEF2FF] border border-[#C7D2FE] p-3.5 rounded-2xl mb-4.5 flex-row items-center">
+                    <Text className="text-lg mr-3">📞</Text>
                     <View className="flex-1">
-                      <Text className="text-[10px] font-bold text-[#6366F1] uppercase tracking-wider">
+                      <Text className="text-xs font-bold text-[#6366F1] uppercase tracking-wider">
                         Official Government Helpline
                       </Text>
-                      <Text className="text-xs font-black text-[#4338CA]">
+                      <Text className="text-sm font-black text-[#4338CA]">
                         {guidance.helpline}
                       </Text>
                     </View>
@@ -510,11 +513,11 @@ export default function GrievanceGuidanceScreen() {
 
                 {/* Filing Steps */}
                 <View className="mb-2">
-                  <Text className="text-xs font-black text-[#14532D] mb-2">
+                  <Text className="text-sm font-black text-[#14532D] mb-2.5">
                     Official Filing Instructions:
                   </Text>
                   {guidance.filingInstructions.map((step, idx) => (
-                    <Text key={idx} className="text-[11px] text-slate-600 mb-1.5 leading-relaxed font-medium">
+                    <Text key={idx} className="text-xs text-slate-700 mb-2 leading-relaxed font-medium">
                       {step}
                     </Text>
                   ))}
@@ -531,39 +534,39 @@ export default function GrievanceGuidanceScreen() {
                     shadowRadius: 10,
                     elevation: 2,
                   }}
-                  className="bg-[#FAF8F5] border border-[#CADDCB] rounded-3xl p-5 mb-5"
+                  className="bg-[#FAF8F5] border border-[#CADDCB] rounded-3xl p-6 mb-6"
                 >
                   <View className="flex-row items-center justify-between mb-2">
-                    <View className="bg-[#EEF2FF] border border-[#C7D2FE] px-2.5 py-1 rounded-xl">
-                      <Text className="text-[9.5px] font-black text-[#4338CA] uppercase tracking-wide">
+                    <View className="bg-[#EEF2FF] border border-[#C7D2FE] px-3 py-1 rounded-xl">
+                      <Text className="text-xs font-black text-[#4338CA] uppercase tracking-wide">
                         Alternative Official Option
                       </Text>
                     </View>
-                    <Text className="text-[10px] font-bold text-slate-500">
+                    <Text className="text-xs font-bold text-slate-500">
                       ⏱️ {guidance.alternative.expectedTimelineDays} Days
                     </Text>
                   </View>
 
-                  <Text className="text-sm font-black text-[#14532D]">
+                  <Text className="text-base font-black text-[#14532D]">
                     {guidance.alternative.authorityName}
                   </Text>
-                  <Text className="text-xs font-bold text-slate-700 mt-0.5">
+                  <Text className="text-sm font-bold text-slate-700 mt-1">
                     {guidance.alternative.portalName}
                   </Text>
-                  <Text className="text-[11px] text-slate-600 font-medium mt-1.5 leading-snug">
+                  <Text className="text-xs text-slate-600 font-medium mt-2 leading-relaxed">
                     {guidance.alternative.whyAppropriate}
                   </Text>
 
-                  <View className="flex-row items-center justify-between mt-3.5 pt-3 border-t border-[#CADDCB]">
-                    <Text className="text-[10.5px] font-bold text-[#4338CA]">
+                  <View className="flex-row items-center justify-between mt-4 pt-3.5 border-t border-[#CADDCB]">
+                    <Text className="text-xs font-bold text-[#4338CA]">
                       📞 {guidance.alternative.helpline}
                     </Text>
                     <TouchableOpacity
                       onPress={() => openExternalUrl(guidance.alternative!.portalUrl)}
-                      className="px-3.5 py-1.5 bg-[#14532D] rounded-xl"
+                      className="px-4 py-2 bg-[#14532D] rounded-xl"
                       activeOpacity={0.8}
                     >
-                      <Text className="text-[10px] font-black text-white uppercase">Open Alternative ↗</Text>
+                      <Text className="text-xs font-black text-white uppercase">Open Alternative ↗</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -573,21 +576,21 @@ export default function GrievanceGuidanceScreen() {
               <TouchableOpacity
                 onPress={() => openExternalUrl(guidance.portalUrl)}
                 activeOpacity={0.85}
-                className="w-full py-4 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs mb-3 flex-row"
+                className="w-full py-4.5 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs mb-3.5 flex-row"
               >
-                <Text className="text-white text-xs font-black uppercase tracking-wider mr-2">
+                <Text className="text-white text-base font-black uppercase tracking-wider mr-2">
                   Continue to Official Government Portal
                 </Text>
-                <Text className="text-white text-sm">➔</Text>
+                <Text className="text-white text-base">➔</Text>
               </TouchableOpacity>
 
               {/* Proceed to Record Token */}
               <TouchableOpacity
                 onPress={handleProceedToSaveRef}
                 activeOpacity={0.75}
-                className="w-full py-3.5 border border-[#14532D] bg-[#EDF5EE] rounded-2xl justify-center items-center"
+                className="w-full py-4 border border-[#14532D] bg-[#EDF5EE] rounded-2xl justify-center items-center"
               >
-                <Text className="text-[#14532D] text-xs font-black uppercase tracking-wider">
+                <Text className="text-[#14532D] text-sm font-black uppercase tracking-wider">
                   Submitted? Save Complaint Reference Number →
                 </Text>
               </TouchableOpacity>
@@ -598,11 +601,11 @@ export default function GrievanceGuidanceScreen() {
           {currentStep === 3 && (
             <View>
               {/* Notice */}
-              <View className="bg-[#EDF5EE] border border-[#CADDCB] p-4 rounded-3xl mb-5">
-                <Text className="text-xs font-black text-[#14532D] mb-1">
+              <View className="bg-[#EDF5EE] border border-[#CADDCB] p-5 rounded-3xl mb-6">
+                <Text className="text-sm font-black text-[#14532D] mb-1.5">
                   Save Complaint Details for Personal Tracking:
                 </Text>
-                <Text className="text-[11px] text-slate-600 leading-relaxed font-medium">
+                <Text className="text-xs text-slate-700 leading-relaxed font-medium">
                   Enter the official registration / reference number given to you by the government portal. Smart Bharat will calculate your waiting days and alert you when follow-up is due.
                 </Text>
               </View>
@@ -615,11 +618,11 @@ export default function GrievanceGuidanceScreen() {
                   shadowRadius: 10,
                   elevation: 2,
                 }}
-                className="bg-[#F3F8F4] border border-[#CADDCB] rounded-3xl p-6 mb-5"
+                className="bg-[#F3F8F4] border border-[#CADDCB] rounded-3xl p-7 mb-6"
               >
                 {/* Reference Number */}
-                <View className="mb-4">
-                  <Text className="text-xs font-black text-[#14532D] uppercase tracking-wider mb-1.5">
+                <View className="mb-5">
+                  <Text className="text-sm font-black text-[#14532D] uppercase tracking-wider mb-2">
                     Official Complaint / Reference Number *
                   </Text>
                   <TextInput
@@ -632,16 +635,16 @@ export default function GrievanceGuidanceScreen() {
                     }}
                     className={`w-full px-4 py-3.5 bg-[#EDF5EE] border ${
                       errors.referenceNumber ? 'border-red-400' : 'border-[#CADDCB]'
-                    } rounded-2xl text-slate-900 font-mono font-black text-sm`}
+                    } rounded-2xl text-slate-900 font-mono font-black text-base`}
                   />
                   {errors.referenceNumber ? (
-                    <Text className="text-red-500 text-[10px] mt-1 ml-1 font-bold">{errors.referenceNumber}</Text>
+                    <Text className="text-red-500 text-xs mt-1 ml-1 font-bold">{errors.referenceNumber}</Text>
                   ) : null}
                 </View>
 
                 {/* Title */}
-                <View className="mb-4">
-                  <Text className="text-xs font-black text-[#14532D] uppercase tracking-wider mb-1.5">
+                <View className="mb-5">
+                  <Text className="text-sm font-black text-[#14532D] uppercase tracking-wider mb-2">
                     Complaint Title *
                   </Text>
                   <TextInput
@@ -649,13 +652,13 @@ export default function GrievanceGuidanceScreen() {
                     placeholderTextColor="#94A3B8"
                     value={title}
                     onChangeText={setTitle}
-                    className="w-full px-4 py-3 bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl text-slate-900 font-bold text-xs"
+                    className="w-full px-4 py-3.5 bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl text-slate-900 font-bold text-base"
                   />
                 </View>
 
                 {/* Government Portal Name */}
-                <View className="mb-4">
-                  <Text className="text-xs font-black text-[#14532D] uppercase tracking-wider mb-1.5">
+                <View className="mb-5">
+                  <Text className="text-sm font-black text-[#14532D] uppercase tracking-wider mb-2">
                     Government Portal Name *
                   </Text>
                   <TextInput
@@ -663,13 +666,13 @@ export default function GrievanceGuidanceScreen() {
                     placeholderTextColor="#94A3B8"
                     value={portalName}
                     onChangeText={setPortalName}
-                    className="w-full px-4 py-3 bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl text-slate-900 font-bold text-xs"
+                    className="w-full px-4 py-3.5 bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl text-slate-900 font-bold text-base"
                   />
                 </View>
 
                 {/* Submission Date */}
-                <View className="mb-4">
-                  <Text className="text-xs font-black text-[#14532D] uppercase tracking-wider mb-1.5">
+                <View className="mb-5">
+                  <Text className="text-sm font-black text-[#14532D] uppercase tracking-wider mb-2">
                     Date of Official Submission (YYYY-MM-DD)
                   </Text>
                   <TextInput
@@ -677,13 +680,13 @@ export default function GrievanceGuidanceScreen() {
                     placeholderTextColor="#94A3B8"
                     value={submissionDate}
                     onChangeText={setSubmissionDate}
-                    className="w-full px-4 py-3 bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl text-slate-900 font-mono font-bold text-xs"
+                    className="w-full px-4 py-3.5 bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl text-slate-900 font-mono font-bold text-base"
                   />
                 </View>
 
                 {/* Expected Timeline */}
-                <View className="mb-4">
-                  <Text className="text-xs font-black text-[#14532D] uppercase tracking-wider mb-1.5">
+                <View className="mb-5">
+                  <Text className="text-sm font-black text-[#14532D] uppercase tracking-wider mb-2">
                     Published Resolution Timeline (Days)
                   </Text>
                   <TextInput
@@ -692,13 +695,13 @@ export default function GrievanceGuidanceScreen() {
                     value={expectedTimelineDays}
                     onChangeText={setExpectedTimelineDays}
                     keyboardType="number-pad"
-                    className="w-full px-4 py-3 bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl text-slate-900 font-bold text-xs"
+                    className="w-full px-4 py-3.5 bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl text-slate-900 font-bold text-base"
                   />
                 </View>
 
                 {/* Initial Personal Notes */}
-                <View className="mb-2">
-                  <Text className="text-xs font-black text-[#14532D] uppercase tracking-wider mb-1.5">
+                <View className="mb-3">
+                  <Text className="text-sm font-black text-[#14532D] uppercase tracking-wider mb-2">
                     Initial Tracking Note (Optional)
                   </Text>
                   <TextInput
@@ -708,7 +711,7 @@ export default function GrievanceGuidanceScreen() {
                     onChangeText={setInitialNote}
                     multiline
                     numberOfLines={2}
-                    className="w-full px-4 py-3 bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl text-slate-900 font-medium text-xs"
+                    className="w-full px-4 py-3.5 bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl text-slate-900 font-medium text-base"
                   />
                 </View>
               </View>
@@ -718,18 +721,19 @@ export default function GrievanceGuidanceScreen() {
                 onPress={handleSaveComplaint}
                 disabled={isSaving}
                 activeOpacity={0.85}
-                className="w-full py-4 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
+                className="w-full py-4.5 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
               >
                 {isSaving ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
-                  <Text className="text-white text-xs font-black uppercase tracking-wider">
+                  <Text className="text-white text-base font-black uppercase tracking-wider">
                     Save Complaint & Start Tracking →
                   </Text>
                 )}
               </TouchableOpacity>
             </View>
           )}
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

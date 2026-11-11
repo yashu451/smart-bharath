@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const ChatMessage = require('../models/ChatMessage');
-const { memoryChat } = require('../config/memoryStore');
+const Activity = require('../models/Activity');
+const { memoryChat, memoryActivities, saveToDisk } = require('../config/memoryStore');
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
@@ -71,6 +72,48 @@ const saveChatMessage = async (req, res, next) => {
       message = { _id: new mongoose.Types.ObjectId().toString(), ...msgData };
       memoryChat.push(message);
     }
+    saveToDisk('chat');
+
+    // Centralized Activity history tracking for AI Assistant interactions
+    if (sender === 'user') {
+      try {
+        const preview = text.trim().length > 55 ? text.trim().slice(0, 52) + '...' : text.trim();
+        const actData = {
+          userId,
+          type: 'assistant',
+          title: 'AI Civic Assistant',
+          subtitle: `Query: "${preview}"`,
+          token: `Token: AI-${Date.now().toString().slice(-6)}`,
+          status: 'Query Answered',
+          statusColor: '#4338CA',
+          statusBg: '#EEF2FF',
+          icon: '🤖',
+          route: '/assistant',
+          metadata: {
+            userQuery: text.trim(),
+            suggestedAction: suggestedAction || null,
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        if (isDbConnected()) {
+          try {
+            await Activity.create(actData);
+          } catch (actErr) {
+            console.warn('[Activity AI] Mongo fallback:', actErr.message);
+          }
+        }
+
+        memoryActivities.unshift({
+          _id: new mongoose.Types.ObjectId().toString(),
+          ...actData,
+        });
+        saveToDisk('activities');
+      } catch (e) {
+        console.warn('AI Activity tracking note:', e.message);
+      }
+    }
 
     res.status(201).json({
       success: true,
@@ -86,8 +129,17 @@ const saveChatMessage = async (req, res, next) => {
 // @access  Private (JWT derived userId)
 const clearChatHistory = async (req, res, next) => {
   try {
-    const userId = req.user._id;
-    await ChatMessage.deleteMany({ userId });
+    const userId = (req.user._id || req.user.id).toString();
+    if (isDbConnected()) {
+      try {
+        await ChatMessage.deleteMany({ userId });
+      } catch {}
+    }
+    const filtered = memoryChat.filter((m) => (m.userId?.toString() || m.userId) !== userId);
+    memoryChat.length = 0;
+    memoryChat.push(...filtered);
+    saveToDisk('chat');
+
     res.json({
       success: true,
       message: 'Chat history cleared successfully.',
@@ -102,4 +154,3 @@ module.exports = {
   saveChatMessage,
   clearChatHistory,
 };
-

@@ -195,16 +195,18 @@ export default function ServicesDirectoryScreen() {
 
       {/* Header bar */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.replace('/home')}
-          style={styles.backButton}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-        <View style={styles.headerTitleGroup}>
-          <Text style={styles.headerTitle}>Services Directory</Text>
-          <Text style={styles.headerTagline}>National Citizen Gateway • Ministry of Electronics & IT</Text>
+        <View style={styles.headerInner}>
+          <TouchableOpacity
+            onPress={() => router.replace('/home')}
+            style={styles.backButton}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.backButtonText}>←</Text>
+          </TouchableOpacity>
+          <View style={styles.headerTitleGroup}>
+            <Text style={styles.headerTitle}>Services Directory</Text>
+            <Text style={styles.headerTagline}>National Citizen Gateway • Ministry of Electronics & IT</Text>
+          </View>
         </View>
       </View>
 
@@ -213,114 +215,116 @@ export default function ServicesDirectoryScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Title details with Orange Indicator */}
-        <View style={styles.titleSection}>
-          <View style={styles.orangeIndicator} />
-          <View style={styles.titleTexts}>
-            <Text style={styles.sectionTitle}>Public Services Catalog</Text>
-            <Text style={styles.sectionSubtitle}>
-              Browse certified citizen services by department, welfare category & state authority
-            </Text>
-          </View>
-        </View>
-
-        {/* Search Bar */}
-        <View style={styles.searchBar}>
-          <Text style={styles.searchIcon}>🔍</Text>
-          <TextInput
-            placeholder="Search all services, departments or certificates..."
-            placeholderTextColor="#94A3B8"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            style={styles.searchInput}
-          />
-          {searchQuery ? (
-            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.searchClear}>
-              <Text style={styles.searchClearText}>✕</Text>
-            </TouchableOpacity>
-          ) : null}
-        </View>
-
-        {/* Category Filter Chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.chipsScrollView}
-          contentContainerStyle={styles.chipsContainer}
-        >
-          {CATEGORY_TABS.map((tab) => {
-            const isActive = selectedCategory === tab;
-            return (
-              <TouchableOpacity
-                key={tab}
-                onPress={() => setSelectedCategory(tab)}
-                style={[styles.chip, isActive && styles.chipActive]}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
-                  {tab}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-
-        {/* Services Cards List */}
-        <View style={styles.cardsGrid}>
-          {filteredServices.length === 0 ? (
-            <View style={styles.emptySearchBox}>
-              <Text style={{ fontSize: 32, marginBottom: 8 }}>🔍</Text>
-              <Text style={styles.emptySearchTitle}>No matching services found</Text>
-              <Text style={styles.emptySearchSubtitle}>
-                Try adjusting your search query or reset filter category.
+        <View style={styles.contentInner}>
+          {/* Title details with Orange Indicator */}
+          <View style={styles.titleSection}>
+            <View style={styles.orangeIndicator} />
+            <View style={styles.titleTexts}>
+              <Text style={styles.sectionTitle}>Public Services Catalog</Text>
+              <Text style={styles.sectionSubtitle}>
+                Browse certified citizen services by department, welfare category & state authority
               </Text>
             </View>
-          ) : (
-            filteredServices.map((svc) => (
-              <TouchableOpacity
-                key={svc.id}
-                onPress={() => {
-                  if (svc.params) {
-                    router.push({ pathname: svc.route as any, params: svc.params } as any);
-                  } else {
-                    router.push(svc.route as any);
-                  }
-                }}
-                activeOpacity={0.8}
-                style={[styles.serviceCard, { borderColor: svc.borderLight }]}
-              >
-                <View
-                  style={[
-                    styles.serviceIconContainer,
-                    { backgroundColor: svc.bgLight, borderColor: svc.borderLight },
-                  ]}
-                >
-                  <Text style={styles.serviceIconText}>{svc.icon}</Text>
-                </View>
+          </View>
 
-                <View style={styles.serviceTextGroup}>
-                  <View style={styles.serviceHeaderRow}>
-                    <Text style={styles.serviceTitleText}>{svc.title}</Text>
-                    <View style={[styles.serviceBadge, { backgroundColor: svc.bgLight, borderColor: svc.borderLight }]}>
-                      <Text style={[styles.serviceBadgeText, { color: svc.color }]}>
-                        {svc.badge}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text style={styles.serviceSubtitleText}>{svc.subtitle}</Text>
-                </View>
-
-                <View
-                  style={[
-                    styles.serviceArrowCircle,
-                    { backgroundColor: svc.bgLight, borderColor: svc.borderLight },
-                  ]}
-                >
-                  <Text style={[styles.serviceArrowText, { color: svc.color }]}>→</Text>
-                </View>
+          {/* Search Bar */}
+          <View style={styles.searchBar}>
+            <Text style={styles.searchIcon}>🔍</Text>
+            <TextInput
+              placeholder="Search all services, departments or certificates..."
+              placeholderTextColor="#94A3B8"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              style={styles.searchInput}
+            />
+            {searchQuery ? (
+              <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.searchClear}>
+                <Text style={styles.searchClearText}>✕</Text>
               </TouchableOpacity>
-            ))
-          )}
+            ) : null}
+          </View>
+
+          {/* Category Filter Chips */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.chipsScrollView}
+            contentContainerStyle={styles.chipsContainer}
+          >
+            {CATEGORY_TABS.map((tab) => {
+              const isActive = selectedCategory === tab;
+              return (
+                <TouchableOpacity
+                  key={tab}
+                  onPress={() => setSelectedCategory(tab)}
+                  style={[styles.chip, isActive && styles.chipActive]}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
+                    {tab}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          {/* Services Cards List */}
+          <View style={styles.cardsGrid}>
+            {filteredServices.length === 0 ? (
+              <View style={styles.emptySearchBox}>
+                <Text style={{ fontSize: 36, marginBottom: 8 }}>🔍</Text>
+                <Text style={styles.emptySearchTitle}>No matching services found</Text>
+                <Text style={styles.emptySearchSubtitle}>
+                  Try adjusting your search query or reset filter category.
+                </Text>
+              </View>
+            ) : (
+              filteredServices.map((svc) => (
+                <TouchableOpacity
+                  key={svc.id}
+                  onPress={() => {
+                    if (svc.params) {
+                      router.push({ pathname: svc.route as any, params: svc.params } as any);
+                    } else {
+                      router.push(svc.route as any);
+                    }
+                  }}
+                  activeOpacity={0.8}
+                  style={[styles.serviceCard, { borderColor: svc.borderLight }]}
+                >
+                  <View
+                    style={[
+                      styles.serviceIconContainer,
+                      { backgroundColor: svc.bgLight, borderColor: svc.borderLight },
+                    ]}
+                  >
+                    <Text style={styles.serviceIconText}>{svc.icon}</Text>
+                  </View>
+
+                  <View style={styles.serviceTextGroup}>
+                    <View style={styles.serviceHeaderRow}>
+                      <Text style={styles.serviceTitleText}>{svc.title}</Text>
+                      <View style={[styles.serviceBadge, { backgroundColor: svc.bgLight, borderColor: svc.borderLight }]}>
+                        <Text style={[styles.serviceBadgeText, { color: svc.color }]}>
+                          {svc.badge}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={styles.serviceSubtitleText}>{svc.subtitle}</Text>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.serviceArrowCircle,
+                      { backgroundColor: svc.bgLight, borderColor: svc.borderLight },
+                    ]}
+                  >
+                    <Text style={[styles.serviceArrowText, { color: svc.color }]}>→</Text>
+                  </View>
+                </TouchableOpacity>
+              ))
+            )}
+          </View>
         </View>
 
         <View style={{ height: 60 }} />
@@ -334,54 +338,56 @@ export default function ServicesDirectoryScreen() {
       </View>
 
       {/* FLOATING BOTTOM NAVIGATION BAR */}
-      <View style={styles.floatingNavContainer}>
-        {/* Home Tab */}
-        <TouchableOpacity
-          style={styles.navTab}
-          onPress={() => router.replace('/home')}
-          activeOpacity={0.7}
-        >
-          <View style={styles.navTabPill}>
-            <Text style={styles.navTabIcon}>🏠</Text>
-            <Text style={styles.navTabLabel}>Home</Text>
-          </View>
-        </TouchableOpacity>
+      <View style={styles.floatingNavWrapper} pointerEvents="box-none">
+        <View style={styles.floatingNavContainer}>
+          {/* Home Tab */}
+          <TouchableOpacity
+            style={styles.navTab}
+            onPress={() => router.replace('/home')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.navTabPill}>
+              <Text style={styles.navTabIcon}>🏠</Text>
+              <Text style={styles.navTabLabel}>Home</Text>
+            </View>
+          </TouchableOpacity>
 
-        {/* Services Tab - Active */}
-        <TouchableOpacity
-          style={styles.navTab}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.navTabPill, styles.navTabPillActive]}>
-            <Text style={[styles.navTabIcon, styles.navTabIconActive]}>🏛️</Text>
-            <Text style={[styles.navTabLabel, styles.navTabLabelActive]}>Services</Text>
-          </View>
-          <View style={styles.activeTabIndicator} />
-        </TouchableOpacity>
+          {/* Services Tab - Active */}
+          <TouchableOpacity
+            style={styles.navTab}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.navTabPill, styles.navTabPillActive]}>
+              <Text style={[styles.navTabIcon, styles.navTabIconActive]}>🏛️</Text>
+              <Text style={[styles.navTabLabel, styles.navTabLabelActive]}>Services</Text>
+            </View>
+            <View style={styles.activeTabIndicator} />
+          </TouchableOpacity>
 
-        {/* Activity Tab */}
-        <TouchableOpacity
-          style={styles.navTab}
-          onPress={() => router.push('/appointments/my-appointments' as any)}
-          activeOpacity={0.7}
-        >
-          <View style={styles.navTabPill}>
-            <Text style={styles.navTabIcon}>📋</Text>
-            <Text style={styles.navTabLabel}>Activity</Text>
-          </View>
-        </TouchableOpacity>
+          {/* Activity Tab */}
+          <TouchableOpacity
+            style={styles.navTab}
+            onPress={() => router.push('/appointments/my-appointments' as any)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.navTabPill}>
+              <Text style={styles.navTabIcon}>📋</Text>
+              <Text style={styles.navTabLabel}>Activity</Text>
+            </View>
+          </TouchableOpacity>
 
-        {/* Profile Tab */}
-        <TouchableOpacity
-          style={styles.navTab}
-          onPress={() => router.replace('/home')}
-          activeOpacity={0.7}
-        >
-          <View style={styles.navTabPill}>
-            <Text style={styles.navTabIcon}>👤</Text>
-            <Text style={styles.navTabLabel}>Profile</Text>
-          </View>
-        </TouchableOpacity>
+          {/* Profile Tab */}
+          <TouchableOpacity
+            style={styles.navTab}
+            onPress={() => router.replace('/home')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.navTabPill}>
+              <Text style={styles.navTabIcon}>👤</Text>
+              <Text style={styles.navTabLabel}>Profile</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -393,10 +399,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#E6F0E8',
   },
   header: {
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#CADDCB',
     backgroundColor: '#EDF5EE',
@@ -413,83 +415,97 @@ const styles = StyleSheet.create({
       default: {},
     }),
   },
+  headerInner: {
+    maxWidth: 1240,
+    width: '100%',
+    alignSelf: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   backButton: {
-    width: 42,
-    height: 42,
+    width: 44,
+    height: 44,
     borderRadius: 16,
     backgroundColor: '#E0EDE1',
     borderWidth: 1,
     borderColor: '#CADDCB',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 14,
+    marginRight: 16,
   },
   backButtonText: {
     color: '#14532D',
     fontWeight: '900',
-    fontSize: 18,
+    fontSize: 20,
   },
   headerTitleGroup: {
     flex: 1,
   },
   headerTitle: {
-    fontSize: 17,
+    fontSize: 20,
     fontWeight: '900',
     color: '#14532D',
   },
   headerTagline: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '700',
     color: '#4B6350',
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginTop: 1,
+    letterSpacing: 0.8,
+    marginTop: 2,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: 20,
-    paddingBottom: 110,
+    padding: 24,
+    paddingBottom: 130,
+  },
+  contentInner: {
+    maxWidth: 1240,
+    width: '100%',
+    alignSelf: 'center',
   },
   titleSection: {
-    marginBottom: 20,
+    marginBottom: 24,
     flexDirection: 'row',
     alignItems: 'center',
   },
   orangeIndicator: {
-    width: 4,
-    height: 24,
-    borderRadius: 2,
+    width: 5,
+    height: 30,
+    borderRadius: 3,
     backgroundColor: '#F97316',
-    marginRight: 12,
+    marginRight: 14,
   },
   titleTexts: {
     flex: 1,
   },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: '900',
     color: '#14532D',
-    letterSpacing: -0.3,
+    letterSpacing: -0.4,
   },
   sectionSubtitle: {
-    fontSize: 12,
+    fontSize: 15,
     fontWeight: '600',
     color: '#4B6350',
-    marginTop: 2,
-    lineHeight: 17,
+    marginTop: 4,
+    lineHeight: 22,
   },
   searchBar: {
     backgroundColor: '#F3F8F4',
     borderWidth: 1,
     borderColor: '#CADDCB',
-    borderRadius: 20,
-    paddingHorizontal: 14,
+    borderRadius: 22,
+    paddingHorizontal: 18,
     flexDirection: 'row',
     alignItems: 'center',
-    height: 50,
-    marginBottom: 16,
+    height: 56,
+    marginBottom: 20,
     ...Platform.select({
       ios: {
         shadowColor: '#14532D',
@@ -504,35 +520,35 @@ const styles = StyleSheet.create({
     }),
   },
   searchIcon: {
-    fontSize: 16,
-    marginRight: 8,
+    fontSize: 18,
+    marginRight: 10,
   },
   searchInput: {
     flex: 1,
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: 16,
+    fontWeight: '600',
     color: '#0F172A',
     height: '100%',
   },
   searchClear: {
-    padding: 6,
+    padding: 8,
   },
   searchClearText: {
-    fontSize: 13,
+    fontSize: 15,
     color: '#94A3B8',
     fontWeight: '800',
   },
   chipsScrollView: {
-    marginBottom: 18,
+    marginBottom: 22,
   },
   chipsContainer: {
     paddingVertical: 2,
   },
   chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    borderRadius: 18,
-    marginRight: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginRight: 10,
     borderWidth: 1,
     borderColor: '#CADDCB',
     backgroundColor: '#EDF5EE',
@@ -542,7 +558,7 @@ const styles = StyleSheet.create({
     borderColor: '#14532D',
   },
   chipText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '700',
     color: '#4B6350',
   },
@@ -551,35 +567,35 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   cardsGrid: {
-    gap: 12,
+    gap: 14,
   },
   emptySearchBox: {
     backgroundColor: '#F3F8F4',
     borderWidth: 1,
     borderColor: '#CADDCB',
-    borderRadius: 24,
-    padding: 28,
+    borderRadius: 28,
+    padding: 32,
     alignItems: 'center',
   },
   emptySearchTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '900',
     color: '#14532D',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   emptySearchSubtitle: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#64748B',
     textAlign: 'center',
   },
   serviceCard: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderRadius: 24,
-    padding: 16,
+    borderRadius: 26,
+    padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
     ...Platform.select({
       ios: {
         shadowColor: '#14532D',
@@ -594,62 +610,62 @@ const styles = StyleSheet.create({
     }),
   },
   serviceIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 18,
+    width: 56,
+    height: 56,
+    borderRadius: 20,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 14,
+    marginRight: 16,
   },
   serviceIconText: {
-    fontSize: 24,
+    fontSize: 28,
   },
   serviceTextGroup: {
     flex: 1,
-    paddingRight: 8,
+    paddingRight: 10,
   },
   serviceHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 2,
+    marginBottom: 4,
   },
   serviceTitleText: {
-    fontSize: 15,
+    fontSize: 17.5,
     fontWeight: '900',
     color: '#0F172A',
     flex: 1,
   },
   serviceBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
     borderWidth: 1,
-    marginLeft: 6,
+    marginLeft: 8,
   },
   serviceBadgeText: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   serviceSubtitleText: {
-    fontSize: 11,
+    fontSize: 14,
     color: '#64748B',
-    lineHeight: 16,
+    lineHeight: 20,
     fontWeight: '500',
     marginTop: 2,
   },
   serviceArrowCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   serviceArrowText: {
-    fontSize: 15,
+    fontSize: 17,
     fontWeight: '900',
   },
   bottomTricolorWaves: {
@@ -665,11 +681,17 @@ const styles = StyleSheet.create({
     height: '100%',
     opacity: 0.7,
   },
-  floatingNavContainer: {
+  floatingNavWrapper: {
     position: 'absolute',
     bottom: Platform.OS === 'ios' ? 24 : 16,
-    left: 20,
-    right: 20,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  floatingNavContainer: {
+    maxWidth: 680,
+    width: '92%',
     backgroundColor: '#FFFFFF',
     borderRadius: 36,
     borderWidth: 1,
@@ -677,8 +699,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 8,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
     ...Platform.select({
       ios: {
         shadowColor: '#14532D',
@@ -700,15 +722,15 @@ const styles = StyleSheet.create({
   navTabPill: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 4,
+    paddingHorizontal: 18,
+    paddingVertical: 5,
     borderRadius: 20,
   },
   navTabPillActive: {
     backgroundColor: '#ECFDF5',
   },
   navTabIcon: {
-    fontSize: 18,
+    fontSize: 20,
     color: '#94A3B8',
   },
   navTabIconActive: {
@@ -716,7 +738,7 @@ const styles = StyleSheet.create({
     transform: [{ scale: 1.1 }],
   },
   navTabLabel: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '600',
     color: '#94A3B8',
     marginTop: 2,
@@ -728,7 +750,7 @@ const styles = StyleSheet.create({
   activeTabIndicator: {
     position: 'absolute',
     bottom: -6,
-    width: 20,
+    width: 22,
     height: 3,
     borderRadius: 2,
     backgroundColor: '#14532D',

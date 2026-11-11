@@ -165,37 +165,37 @@ export default function RegisterScreen() {
               shadowRadius: 24,
               elevation: 4,
             }}
-            className="w-full max-w-md bg-[#F3F8F4] border border-[#CADDCB] rounded-3xl p-8 my-auto relative"
+            className="w-full max-w-xl bg-[#F3F8F4] border border-[#CADDCB] rounded-3xl p-9 my-auto relative"
           >
             {/* Back to Public Landing Page Button */}
             <TouchableOpacity
               onPress={() => router.replace('/')}
-              className="absolute top-5 left-5 w-9 h-9 rounded-xl bg-[#E0EDE1] border border-[#CADDCB] justify-center items-center z-10"
+              className="absolute top-5 left-5 w-10 h-10 rounded-xl bg-[#E0EDE1] border border-[#CADDCB] justify-center items-center z-10"
               activeOpacity={0.7}
               accessibilityLabel="Back to Home"
             >
-              <Text className="text-[#14532D] font-black text-sm">←</Text>
+              <Text className="text-[#14532D] font-black text-base">←</Text>
             </TouchableOpacity>
 
             {/* Top Emblem & Header */}
-            <View className="items-center mb-6">
-              <View className="px-3.5 py-1.5 rounded-full bg-orange-50 border border-orange-200/60 mb-3 flex-row items-center">
+            <View className="items-center mb-7">
+              <View className="px-4 py-2 rounded-full bg-orange-50 border border-orange-200/60 mb-3.5 flex-row items-center">
                 <View className="w-2 h-2 rounded-full bg-[#F97316] mr-2" />
-                <Text className="text-[10px] font-extrabold text-[#F97316] uppercase tracking-widest">
+                <Text className="text-xs font-black text-[#F97316] uppercase tracking-widest">
                   Citizen Enrollment
                 </Text>
               </View>
 
               {/* National Emblem in Forest Green */}
-              <View className="w-16 h-16 rounded-2xl bg-[#14532D] justify-center items-center shadow-md relative mb-3">
-                <Text className="text-2xl">🏛️</Text>
+              <View className="w-18 h-18 rounded-2xl bg-[#14532D] justify-center items-center shadow-md relative mb-3.5 p-4">
+                <Text className="text-3xl">🏛️</Text>
                 <View className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#F59E0B] border-2 border-white" />
               </View>
 
-              <Text className="text-2xl font-black text-[#14532D] tracking-tight">
-                Create Citizen Account <Text className="text-xl">🇮🇳</Text>
+              <Text className="text-3xl font-black text-[#14532D] tracking-tight">
+                Create Citizen Account <Text className="text-2xl">🇮🇳</Text>
               </Text>
-              <Text className="text-xs font-semibold text-slate-500 mt-1 text-center">
+              <Text className="text-base font-medium text-slate-600 mt-2 text-center">
                 Access welfare schemes, certificates and public appointments
               </Text>
             </View>
@@ -206,40 +206,40 @@ export default function RegisterScreen() {
                 <View className="w-16 h-16 bg-emerald-50 border border-emerald-200 rounded-full justify-center items-center mb-4">
                   <Text className="text-[#10B981] text-2xl font-bold">✓</Text>
                 </View>
-                <Text className="text-lg font-black text-[#14532D]">Account Verified & Created!</Text>
-                <Text className="text-xs text-slate-500 mt-1">Directing to citizen dashboard...</Text>
+                <Text className="text-xl font-black text-[#14532D]">Account Verified & Created!</Text>
+                <Text className="text-sm font-semibold text-slate-500 mt-1.5">Directing to citizen dashboard...</Text>
               </View>
             ) : (
               /* Registration Form */
-              <View className="space-y-3.5 mb-5">
+              <View className="space-y-4 mb-6">
                 {submitError ? (
-                  <View className="p-3 bg-red-50 border border-red-200 rounded-2xl mb-2">
-                    <Text className="text-red-600 text-xs font-bold text-center">
+                  <View className="p-3.5 bg-red-50 border border-red-200 rounded-2xl mb-2">
+                    <Text className="text-red-600 text-sm font-bold text-center">
                       {submitError}
                     </Text>
                   </View>
                 ) : null}
 
                 {/* Full Name */}
-                <View className="mb-3">
-                  <Text className="text-xs font-bold text-slate-700 mb-1 ml-0.5">Full Name (as per ID)</Text>
+                <View className="mb-3.5">
+                  <Text className="text-sm font-black text-slate-800 mb-1.5 ml-0.5">Full Name (as per ID)</Text>
                   <TextInput
                     placeholder="Enter full name"
                     placeholderTextColor="#94A3B8"
                     value={name}
                     onChangeText={handleNameChange}
-                    className={`w-full px-4 py-3 bg-[#EDF5EE] border ${
+                    className={`w-full px-4 py-3.5 bg-[#EDF5EE] border ${
                       nameError ? 'border-red-400 bg-red-50/20' : 'border-[#CADDCB]'
-                    } rounded-2xl text-slate-900 font-semibold text-sm`}
+                    } rounded-2xl text-slate-900 font-semibold text-base`}
                   />
                   {nameError ? (
-                    <Text className="text-red-500 text-[11px] mt-1 ml-1 font-semibold">{nameError}</Text>
+                    <Text className="text-red-500 text-xs mt-1 ml-1 font-semibold">{nameError}</Text>
                   ) : null}
                 </View>
 
                 {/* Email Address */}
-                <View className="mb-3">
-                  <Text className="text-xs font-bold text-slate-700 mb-1 ml-0.5">Email Address</Text>
+                <View className="mb-3.5">
+                  <Text className="text-sm font-black text-slate-800 mb-1.5 ml-0.5">Email Address</Text>
                   <TextInput
                     placeholder="name@example.com"
                     placeholderTextColor="#94A3B8"
@@ -247,18 +247,18 @@ export default function RegisterScreen() {
                     onChangeText={handleEmailChange}
                     keyboardType="email-address"
                     autoCapitalize="none"
-                    className={`w-full px-4 py-3 bg-[#EDF5EE] border ${
+                    className={`w-full px-4 py-3.5 bg-[#EDF5EE] border ${
                       emailError ? 'border-red-400 bg-red-50/20' : 'border-[#CADDCB]'
-                    } rounded-2xl text-slate-900 font-semibold text-sm`}
+                    } rounded-2xl text-slate-900 font-semibold text-base`}
                   />
                   {emailError ? (
-                    <Text className="text-red-500 text-[11px] mt-1 ml-1 font-semibold">{emailError}</Text>
+                    <Text className="text-red-500 text-xs mt-1 ml-1 font-semibold">{emailError}</Text>
                   ) : null}
                 </View>
 
                 {/* Mobile Number */}
-                <View className="mb-3">
-                  <Text className="text-xs font-bold text-slate-700 mb-1 ml-0.5">10-Digit Mobile Number</Text>
+                <View className="mb-3.5">
+                  <Text className="text-sm font-black text-slate-800 mb-1.5 ml-0.5">10-Digit Mobile Number</Text>
                   <TextInput
                     placeholder="Enter mobile number"
                     placeholderTextColor="#94A3B8"
@@ -267,21 +267,21 @@ export default function RegisterScreen() {
                     keyboardType="number-pad"
                     inputMode="numeric"
                     maxLength={10}
-                    className={`w-full px-4 py-3 bg-[#EDF5EE] border ${
+                    className={`w-full px-4 py-3.5 bg-[#EDF5EE] border ${
                       mobileError ? 'border-red-400 bg-red-50/20' : 'border-[#CADDCB]'
-                    } rounded-2xl text-slate-900 font-semibold text-sm`}
+                    } rounded-2xl text-slate-900 font-semibold text-base`}
                   />
                   {mobileError ? (
-                    <Text className="text-red-500 text-[11px] mt-1 ml-1 font-semibold">{mobileError}</Text>
+                    <Text className="text-red-500 text-xs mt-1 ml-1 font-semibold">{mobileError}</Text>
                   ) : null}
                 </View>
 
                 {/* Secure Password / PIN */}
-                <View className="mb-3">
-                  <View className="flex-row justify-between items-center mb-1">
-                    <Text className="text-xs font-bold text-slate-700 ml-0.5">Create Secure PIN / Password</Text>
+                <View className="mb-3.5">
+                  <View className="flex-row justify-between items-center mb-1.5">
+                    <Text className="text-sm font-black text-slate-800 ml-0.5">Create Secure PIN / Password</Text>
                     <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                      <Text className="text-xs font-bold text-[#14532D]">
+                      <Text className="text-sm font-black text-[#14532D]">
                         {showPassword ? 'Hide' : 'Show'}
                       </Text>
                     </TouchableOpacity>
@@ -292,21 +292,21 @@ export default function RegisterScreen() {
                     value={password}
                     onChangeText={handlePasswordChange}
                     secureTextEntry={!showPassword}
-                    className={`w-full px-4 py-3 bg-[#EDF5EE] border ${
+                    className={`w-full px-4 py-3.5 bg-[#EDF5EE] border ${
                       passwordError ? 'border-red-400 bg-red-50/20' : 'border-[#CADDCB]'
-                    } rounded-2xl text-slate-900 font-semibold text-sm`}
+                    } rounded-2xl text-slate-900 font-semibold text-base`}
                   />
                   {passwordError ? (
-                    <Text className="text-red-500 text-[11px] mt-1 ml-1 font-semibold">{passwordError}</Text>
+                    <Text className="text-red-500 text-xs mt-1 ml-1 font-semibold">{passwordError}</Text>
                   ) : null}
                 </View>
 
                 {/* Confirm Password */}
                 <View className="mb-4">
-                  <View className="flex-row justify-between items-center mb-1">
-                    <Text className="text-xs font-bold text-slate-700 ml-0.5">Confirm PIN / Password</Text>
+                  <View className="flex-row justify-between items-center mb-1.5">
+                    <Text className="text-sm font-black text-slate-800 ml-0.5">Confirm PIN / Password</Text>
                     <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-                      <Text className="text-xs font-bold text-[#14532D]">
+                      <Text className="text-sm font-black text-[#14532D]">
                         {showConfirmPassword ? 'Hide' : 'Show'}
                       </Text>
                     </TouchableOpacity>
@@ -317,12 +317,12 @@ export default function RegisterScreen() {
                     value={confirmPassword}
                     onChangeText={handleConfirmPasswordChange}
                     secureTextEntry={!showConfirmPassword}
-                    className={`w-full px-4 py-3 bg-[#EDF5EE] border ${
+                    className={`w-full px-4 py-3.5 bg-[#EDF5EE] border ${
                       confirmPasswordError ? 'border-red-400 bg-red-50/20' : 'border-[#CADDCB]'
-                    } rounded-2xl text-slate-900 font-semibold text-sm`}
+                    } rounded-2xl text-slate-900 font-semibold text-base`}
                   />
                   {confirmPasswordError ? (
-                    <Text className="text-red-500 text-[11px] mt-1 ml-1 font-semibold">{confirmPasswordError}</Text>
+                    <Text className="text-red-500 text-xs mt-1 ml-1 font-semibold">{confirmPasswordError}</Text>
                   ) : null}
                 </View>
 
@@ -338,10 +338,10 @@ export default function RegisterScreen() {
                   {isLoading ? (
                     <View className="flex-row items-center space-x-2">
                       <ActivityIndicator size="small" color="#FFFFFF" />
-                      <Text className="text-sm font-bold text-white ml-2">Enrolling Citizen...</Text>
+                      <Text className="text-base font-black text-white ml-2">Enrolling Citizen...</Text>
                     </View>
                   ) : (
-                    <Text className="text-sm font-bold text-white uppercase tracking-wider">
+                    <Text className="text-base font-black text-white uppercase tracking-wider">
                       Create Account →
                     </Text>
                   )}
@@ -349,9 +349,9 @@ export default function RegisterScreen() {
 
                 {/* Return to Login */}
                 <View className="flex-row justify-center items-center pt-3">
-                  <Text className="text-xs text-slate-500 font-medium">Already registered?</Text>
+                  <Text className="text-sm text-slate-600 font-medium">Already registered?</Text>
                   <TouchableOpacity onPress={() => router.push('/auth' as any)} className="ml-1.5">
-                    <Text className="text-xs font-black text-[#F97316]">Sign In</Text>
+                    <Text className="text-sm font-black text-[#F97316]">Sign In</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -359,7 +359,7 @@ export default function RegisterScreen() {
           </View>
 
           {/* Official Footer */}
-          <Text className="text-[11px] text-slate-400 font-medium text-center mt-6">
+          <Text className="text-xs text-slate-500 font-semibold text-center mt-8">
             Digital India Initiative • Ministry of Electronics & IT
           </Text>
         </ScrollView>

@@ -10,8 +10,9 @@ const activitySchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['appointment', 'grievance', 'scheme', 'document'],
+      enum: ['appointment', 'grievance', 'scheme', 'document', 'assistant', 'service', 'other'],
       required: true,
+      index: true,
     },
     title: {
       type: String,

@@ -88,7 +88,7 @@ export const dashboardApi = {
   },
 
   createActivity: async (activityData: {
-    type: 'appointment' | 'grievance' | 'scheme' | 'document';
+    type: 'appointment' | 'grievance' | 'scheme' | 'document' | 'assistant' | 'service' | 'other';
     title: string;
     subtitle?: string;
     token?: string;
@@ -124,6 +124,13 @@ export const dashboardApi = {
     return request(`/dashboard/activities/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(updates),
+    });
+  },
+
+  migrateHistory: async (history: any[]) => {
+    return request<{ success: boolean; migratedCount: number }>('/dashboard/migrate-history', {
+      method: 'POST',
+      body: JSON.stringify({ history }),
     });
   },
 };
@@ -362,6 +369,70 @@ export const grievanceApi = {
     });
   },
 };
+
+export interface SavedSchemeItem {
+  _id: string;
+  schemeId: string;
+  name: string;
+  category: string;
+  description?: string;
+  applicationUrl?: string;
+  officialWebsite?: string;
+  benefits?: string;
+  eligibility?: string;
+  hasOnlineApplication?: boolean;
+  savedAt: string;
+}
+
+export const schemeApi = {
+  getSavedSchemes: async () => {
+    return request<{ count: number; schemes: SavedSchemeItem[] }>('/schemes/saved', {
+      method: 'GET',
+    });
+  },
+
+  checkIsSaved: async (schemeId: string) => {
+    return request<{ success: boolean; isSaved: boolean; schemeId: string }>(`/schemes/check/${encodeURIComponent(schemeId)}`, {
+      method: 'GET',
+    });
+  },
+
+  saveScheme: async (payload: {
+    schemeId: string;
+    name: string;
+    category: string;
+    description?: string;
+    applicationUrl?: string;
+    officialWebsite?: string;
+    benefits?: string;
+    eligibility?: string;
+    hasOnlineApplication?: boolean;
+  }) => {
+    return request<{ scheme: SavedSchemeItem }>('/schemes/save', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  removeSavedScheme: async (schemeId: string) => {
+    return request(`/schemes/save/${encodeURIComponent(schemeId)}`, {
+      method: 'DELETE',
+    });
+  },
+
+  recordApplication: async (payload: {
+    schemeId: string;
+    name: string;
+    category?: string;
+    applicationUrl?: string;
+  }) => {
+    return request('/schemes/apply', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+};
+
 
 
 

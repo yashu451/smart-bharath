@@ -11,6 +11,8 @@ backend/.env*.local
 
 # Backend uploads and storage
 backend/uploads/
+backend/data/*.json
+backend/data/*.tmp
 
 # Expo
 .expo/

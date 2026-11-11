@@ -146,18 +146,20 @@ export default function EligibilityQuestionnaireScreen() {
 
       {/* Header bar */}
       <View className="px-6 py-4 flex-row items-center border-b border-[#CADDCB] bg-[#EDF5EE]">
-        <TouchableOpacity
-          onPress={() => router.replace('/home')}
-          className="w-11 h-11 rounded-2xl bg-[#E0EDE1] border border-[#CADDCB] justify-center items-center mr-3.5 shadow-xs"
-          activeOpacity={0.7}
-        >
-          <Text className="text-[#14532D] font-black text-lg">←</Text>
-        </TouchableOpacity>
-        <View className="flex-1">
-          <Text className="text-base font-black text-[#14532D]">Scheme Finder</Text>
-          <Text className="text-[10px] font-bold text-[#4B6350] uppercase tracking-widest mt-0.5">
-            Welfare & Benefit Programs • AI Matching Engine
-          </Text>
+        <View className="max-w-4xl w-full mx-auto flex-row items-center">
+          <TouchableOpacity
+            onPress={() => router.replace('/home')}
+            className="w-12 h-12 rounded-2xl bg-[#E0EDE1] border border-[#CADDCB] justify-center items-center mr-4 shadow-xs"
+            activeOpacity={0.7}
+          >
+            <Text className="text-[#14532D] font-black text-xl">←</Text>
+          </TouchableOpacity>
+          <View className="flex-1">
+            <Text className="text-xl font-black text-[#14532D]">Scheme Finder</Text>
+            <Text className="text-xs font-bold text-[#4B6350] uppercase tracking-widest mt-0.5">
+              Welfare & Benefit Programs • AI Matching Engine
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -165,14 +167,14 @@ export default function EligibilityQuestionnaireScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 50 }}>
-          
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingBottom: 130 }}>
+          <View className="max-w-4xl w-full mx-auto">
           {/* Title Segment with Orange Indicator */}
-          <View className="mb-5 flex-row items-center">
-            <View className="w-1 h-6 rounded-full bg-[#F97316] mr-3" />
+          <View className="mb-6 flex-row items-center">
+            <View className="w-1.5 h-8 rounded-full bg-[#F97316] mr-3.5" />
             <View className="flex-1">
-              <Text className="text-2xl font-black text-[#14532D] tracking-tight">Citizen Profile Questionnaire</Text>
-              <Text className="text-xs font-semibold text-slate-500 mt-0.5 leading-relaxed">
+              <Text className="text-3xl font-black text-[#14532D] tracking-tight">Citizen Profile Questionnaire</Text>
+              <Text className="text-base font-medium text-slate-600 mt-1 leading-relaxed">
                 Answer the questions below so our AI engine can identify government programs and financial subsidies you qualify for.
               </Text>
             </View>
@@ -187,15 +189,15 @@ export default function EligibilityQuestionnaireScreen() {
               shadowRadius: 10,
               elevation: 2,
             }}
-            className="bg-[#F3F8F4] border border-[#CADDCB] rounded-3xl p-5 mb-5"
+            className="bg-[#F3F8F4] border border-[#CADDCB] rounded-3xl p-6 mb-6"
           >
-            <View className="flex-row justify-between items-center mb-2.5">
-              <Text className="text-[10px] font-black text-[#4B6350] uppercase tracking-widest">
+            <View className="flex-row justify-between items-center mb-3">
+              <Text className="text-xs font-black text-[#4B6350] uppercase tracking-widest">
                 Questionnaire Completion
               </Text>
-              <Text className="text-xs font-black text-[#14532D]">{progress}%</Text>
+              <Text className="text-sm font-black text-[#14532D]">{progress}%</Text>
             </View>
-            <View className="w-full h-2.5 bg-[#EDF5EE] border border-[#CADDCB] rounded-full overflow-hidden">
+            <View className="w-full h-3 bg-[#EDF5EE] border border-[#CADDCB] rounded-full overflow-hidden">
               <View style={{ width: `${progress}%` }} className="h-full bg-[#14532D] rounded-full" />
             </View>
           </View>
@@ -204,8 +206,8 @@ export default function EligibilityQuestionnaireScreen() {
           <View className="space-y-6">
 
             {/* State Picker Dropdown */}
-            <View className="space-y-1">
-              <Text className="text-xs font-bold text-slate-500 ml-1">State *</Text>
+            <View className="space-y-1.5">
+              <Text className="text-sm font-black text-slate-800 ml-1">State *</Text>
               <TouchableOpacity
                 onPress={() => {
                   setShowStateDropdown(!showStateDropdown);
@@ -213,14 +215,14 @@ export default function EligibilityQuestionnaireScreen() {
                   setShowOccupationDropdown(false);
                   setShowCasteDropdown(false);
                 }}
-                className={`w-full px-4 py-3.5 bg-slate-50 border ${
+                className={`w-full px-4 py-4 bg-slate-50 border ${
                   errors.state ? 'border-red-400' : 'border-slate-200'
-                } rounded-[16px] flex-row justify-between items-center`}
+                } rounded-[18px] flex-row justify-between items-center`}
               >
-                <Text className={`font-semibold ${selectedState ? 'text-slate-800' : 'text-slate-400'}`}>
+                <Text className={`text-base font-semibold ${selectedState ? 'text-slate-800' : 'text-slate-400'}`}>
                   {selectedState || 'Select your State'}
                 </Text>
-                <Text className="text-slate-400 text-xs">{showStateDropdown ? '▲' : '▼'}</Text>
+                <Text className="text-slate-500 text-sm">{showStateDropdown ? '▲' : '▼'}</Text>
               </TouchableOpacity>
               
               {showStateDropdown && (
@@ -232,15 +234,15 @@ export default function EligibilityQuestionnaireScreen() {
                         setSelectedState(st);
                         setShowStateDropdown(false);
                       }}
-                      className="px-4 py-3 border-b border-slate-100"
+                      className="px-4 py-3.5 border-b border-slate-100"
                     >
-                      <Text className="font-semibold text-slate-700">{st}</Text>
+                      <Text className="text-base font-semibold text-slate-700">{st}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
               )}
               {errors.state ? (
-                <Text className="text-red-500 text-[10px] ml-1 font-semibold">{errors.state}</Text>
+                <Text className="text-red-500 text-xs ml-1 font-semibold">{errors.state}</Text>
               ) : null}
             </View>
 
@@ -518,8 +520,8 @@ export default function EligibilityQuestionnaireScreen() {
             </View>
 
             {/* Caste Category Picker Dropdown (Optional) */}
-            <View className="space-y-1 border-t border-slate-100 pt-5 mt-4">
-              <Text className="text-xs font-bold text-slate-500 ml-1">Caste Category (Optional)</Text>
+            <View className="space-y-1.5 border-t border-slate-100 pt-5 mt-4">
+              <Text className="text-sm font-black text-slate-800 ml-1">Caste Category (Optional)</Text>
               <TouchableOpacity
                 onPress={() => {
                   setShowCasteDropdown(!showCasteDropdown);
@@ -527,12 +529,12 @@ export default function EligibilityQuestionnaireScreen() {
                   setShowDistrictDropdown(false);
                   setShowOccupationDropdown(false);
                 }}
-                className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-[16px] flex-row justify-between items-center"
+                className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-[18px] flex-row justify-between items-center"
               >
-                <Text className={`font-semibold ${caste ? 'text-slate-800' : 'text-slate-400'}`}>
+                <Text className={`text-base font-semibold ${caste ? 'text-slate-800' : 'text-slate-400'}`}>
                   {caste || 'Select Category'}
                 </Text>
-                <Text className="text-slate-400 text-xs">{showCasteDropdown ? '▲' : '▼'}</Text>
+                <Text className="text-slate-500 text-sm">{showCasteDropdown ? '▲' : '▼'}</Text>
               </TouchableOpacity>
 
               {showCasteDropdown && (
@@ -544,9 +546,9 @@ export default function EligibilityQuestionnaireScreen() {
                         setCaste(cst);
                         setShowCasteDropdown(false);
                       }}
-                      className="px-4 py-3 border-b border-slate-100"
+                      className="px-4 py-3.5 border-b border-slate-100"
                     >
-                      <Text className="font-semibold text-slate-700">{cst}</Text>
+                      <Text className="text-base font-semibold text-slate-700">{cst}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -559,13 +561,14 @@ export default function EligibilityQuestionnaireScreen() {
           <TouchableOpacity
             onPress={handleFindSchemes}
             activeOpacity={0.85}
-            className="w-full py-4 bg-[#14532D] rounded-2xl justify-center items-center mt-8 shadow-xs"
+            className="w-full py-4.5 bg-[#14532D] rounded-2xl justify-center items-center mt-9 shadow-xs"
           >
-            <Text className="text-white text-sm font-black uppercase tracking-wider">
+            <Text className="text-white text-base font-black uppercase tracking-wider">
               Match My Eligible Schemes →
             </Text>
           </TouchableOpacity>
 
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

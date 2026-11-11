@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Activity = require('../models/Activity');
 const Document = require('../models/Document');
 
-const { memoryActivities } = require('../config/memoryStore');
+const { memoryActivities, saveToDisk } = require('../config/memoryStore');
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
@@ -128,6 +128,7 @@ const getDashboardData = async (req, res, next) => {
     const appointmentsCount = userActivities.filter((a) => a.type === 'appointment' && a.status !== 'Cancelled').length;
     const grievancesCount = userActivities.filter((a) => a.type === 'grievance').length;
     const schemesCount = userActivities.filter((a) => a.type === 'scheme').length;
+    const assistantCount = userActivities.filter((a) => a.type === 'assistant').length;
 
     res.json({
       success: true,
@@ -144,6 +145,7 @@ const getDashboardData = async (req, res, next) => {
         grievances: grievancesCount,
         schemes: schemesCount,
         documents: documentsCount,
+        assistant: assistantCount,
       },
       upcomingAppointments,
       overdueAppointments,
@@ -259,6 +261,7 @@ const createActivity = async (req, res, next) => {
       };
       memoryActivities.unshift(activity);
     }
+    saveToDisk('activities');
 
     res.status(201).json({
       success: true,
@@ -303,6 +306,7 @@ const cancelActivity = async (req, res, next) => {
         activity = memoryActivities[idx];
       }
     }
+    saveToDisk('activities');
 
     if (!activity) {
       return res.status(404).json({
@@ -358,6 +362,7 @@ const updateActivity = async (req, res, next) => {
     if (memIdx !== -1) {
       Object.assign(memoryActivities[memIdx], updates, { updatedAt: new Date().toISOString() });
       if (!activity) activity = memoryActivities[memIdx];
+      saveToDisk('activities');
     }
 
     if (!activity) {
@@ -377,10 +382,106 @@ const updateActivity = async (req, res, next) => {
   }
 };
 
+// @desc    Migrate historical activities into MongoDB and persistent storage
+// @route   POST /api/dashboard/migrate-history
+// @access  Private (Derived strictly from verified JWT)
+const migrateHistoricalActivities = async (req, res, next) => {
+  try {
+    const userId = (req.user._id || req.user.id || '').toString();
+    const { history } = req.body;
+
+    if (!Array.isArray(history) || history.length === 0) {
+      return res.json({ success: true, migratedCount: 0, message: 'No historical records to migrate.' });
+    }
+
+    let userActivities = [];
+    if (isDbConnected()) {
+      try {
+        userActivities = await Activity.find({ userId });
+      } catch (err) {
+        userActivities = memoryActivities.filter((a) => (a.userId?.toString() || a.userId) === userId);
+      }
+    } else {
+      userActivities = memoryActivities.filter((a) => (a.userId?.toString() || a.userId) === userId);
+    }
+
+    let migratedCount = 0;
+
+    for (const item of history) {
+      if (!item || !item.title) continue;
+
+      const existingToken = item.token ? item.token.trim() : '';
+      const isDuplicate = userActivities.some((act) => {
+        if (existingToken && act.token && act.token.includes(existingToken.replace(/^Token:\s*/, ''))) {
+          return true;
+        }
+        if (
+          act.type === (item.type || 'appointment') &&
+          act.title === item.title &&
+          act.metadata?.date &&
+          item.metadata?.date &&
+          act.metadata?.date === item.metadata?.date
+        ) {
+          return true;
+        }
+        return false;
+      });
+
+      if (!isDuplicate) {
+        const actData = {
+          userId,
+          type: item.type || 'appointment',
+          title: item.title.trim(),
+          subtitle: item.subtitle ? item.subtitle.trim() : '',
+          token: item.token ? item.token.trim() : '',
+          status: item.status || 'Upcoming',
+          statusColor: item.statusColor || '#000080',
+          statusBg: item.statusBg || '#EEF2FF',
+          icon: item.icon || '📅',
+          route: item.route || '/appointments/my-appointments',
+          metadata: item.metadata || {},
+          createdAt: item.createdAt || new Date().toISOString(),
+          updatedAt: item.updatedAt || new Date().toISOString(),
+        };
+
+        let newAct = null;
+        if (isDbConnected()) {
+          try {
+            newAct = await Activity.create(actData);
+          } catch (e) {
+            console.warn('[Migrate Activity] Mongo create notice:', e.message);
+          }
+        }
+
+        const memAct = newAct ? (newAct.toObject ? newAct.toObject() : newAct) : {
+          _id: new mongoose.Types.ObjectId().toString(),
+          ...actData,
+        };
+        memoryActivities.unshift(memAct);
+        userActivities.push(memAct);
+        migratedCount++;
+      }
+    }
+
+    if (migratedCount > 0) {
+      saveToDisk('activities');
+    }
+
+    res.json({
+      success: true,
+      message: `Migrated ${migratedCount} historical records successfully.`,
+      migratedCount,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getDashboardData,
   getUserActivities,
   createActivity,
   cancelActivity,
   updateActivity,
+  migrateHistoricalActivities,
 };
