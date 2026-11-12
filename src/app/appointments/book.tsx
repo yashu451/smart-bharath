@@ -12,7 +12,8 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { DEPARTMENTS_DB } from '@/constants/appointment-departments';
-import { dashboardApi } from '@/services/api';
+import { appointmentApi, dashboardApi } from '@/services/api';
+import { getAuthToken } from '@/services/storage';
 import { CalendarDatePicker } from '@/components/appointments/CalendarDatePicker';
 import { isFutureOrTodayIST, getTodayIST } from '@/utils/date-time';
 import {
@@ -209,6 +210,9 @@ export default function BookAppointmentScreen() {
   const availableLocations = stateLocations[dept.id] || stateLocations.default || stateLocations.passport;
 
   const handleConfirmBooking = async () => {
+    // 1. Prevent duplicate bookings if already processing
+    if (isBooking) return;
+
     const newErrors: { [key: string]: string } = {};
 
     if (!selectedLocation) newErrors.location = 'Please select a Preferred Office Location.';
@@ -235,21 +239,31 @@ export default function BookAppointmentScreen() {
       return;
     }
 
+    // 2. Ensure authentication token exists
+    const token = getAuthToken();
+    if (!token) {
+      Alert.alert(
+        'Authentication Required',
+        'Please sign in to your Smart Bharat account to schedule an official appointment and receive your verified gatepass.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Sign In', onPress: () => router.push('/login' as any) },
+        ]
+      );
+      return;
+    }
+
     setIsBooking(true);
-    const randomId = `APT-SB-${Math.floor(100000 + Math.random() * 900000)}`;
+    setErrors({});
+
+    const clientBookingId = `APT-SB-${Math.floor(100000 + Math.random() * 900000)}`;
 
     try {
-      const res = await dashboardApi.createActivity({
-        type: 'appointment',
-        title: `${dept.name}`,
-        subtitle: `${selectedService} • ${selectedDate}, ${selectedTime}`,
-        token: `Token: ${randomId}`,
-        status: 'Upcoming',
-        statusColor: '#000080',
-        statusBg: '#EEF2FF',
-        icon: dept.icon || '🛂',
-        route: '/appointments/my-appointments',
-        metadata: {
+      // 3. Call backend appointment booking API endpoint
+      let apptData: any = null;
+
+      try {
+        const apptRes = await appointmentApi.bookAppointment({
           deptId: dept.id,
           deptName: dept.name,
           service: selectedService,
@@ -259,38 +273,83 @@ export default function BookAppointmentScreen() {
           district: selectedDistrict,
           date: selectedDate,
           time: selectedTime,
-          bookingId: randomId,
-          purpose,
-        },
-      });
+          purpose: purpose.trim(),
+          bookingId: clientBookingId,
+        });
 
-      if (!res.success) {
-        throw new Error(res.message || 'Server was unable to save appointment booking.');
+        if (apptRes.success && apptRes.appointment) {
+          apptData = apptRes.appointment;
+        } else if (!apptRes.success) {
+          throw new Error(apptRes.message || 'Server rejected appointment booking.');
+        }
+      } catch (directErr: any) {
+        console.warn('[Appointment API Route Note]:', directErr.message);
+
+        // Fallback to dashboard activity endpoint if direct route had issue
+        const actRes = await dashboardApi.createActivity({
+          type: 'appointment',
+          title: dept.name,
+          subtitle: `${selectedService} • ${selectedDate}, ${selectedTime}`,
+          token: `Token: ${clientBookingId}`,
+          status: 'Upcoming',
+          statusColor: '#000080',
+          statusBg: '#EEF2FF',
+          icon: dept.icon || '🛂',
+          route: '/appointments/my-appointments',
+          metadata: {
+            deptId: dept.id,
+            deptName: dept.name,
+            service: selectedService,
+            location: selectedLocation,
+            state: selectedState,
+            stateName: currentStateObj.name,
+            district: selectedDistrict,
+            date: selectedDate,
+            time: selectedTime,
+            bookingId: clientBookingId,
+            purpose: purpose.trim(),
+          },
+        });
+
+        if (actRes.success && (actRes as any)?.activity) {
+          const act = (actRes as any).activity;
+          apptData = {
+            ...act.metadata,
+            _id: act._id,
+            bookingId: act.metadata?.bookingId || clientBookingId,
+            verificationToken: act.metadata?.verificationToken || '',
+            qrCodeDataUrl: act.metadata?.qrCodeDataUrl || '',
+          };
+        } else {
+          throw new Error(actRes.message || directErr.message || 'Server was unable to save appointment booking.');
+        }
       }
 
-      const createdAct = (res as any)?.activity;
-      const meta = createdAct?.metadata || {};
-      const qrDataUrl = meta.qrCodeDataUrl || '';
-      const verificationToken = meta.verificationToken || '';
+      if (!apptData) {
+        throw new Error('Appointment confirmation data not received from server.');
+      }
 
-      // Schedule local browser reminder notification for this appointment
+      const confirmedBookingId = apptData.bookingId || clientBookingId;
+      const verificationToken = apptData.verificationToken || '';
+      const qrDataUrl = apptData.qrCodeDataUrl || '';
+
+      // 4. Schedule local browser reminder notification for this appointment
       try {
-        const activityId = createdAct?._id || randomId;
         await scheduleAppointmentNotification({
-          id: activityId,
+          id: apptData._id || confirmedBookingId,
           officeName: dept.name,
           date: selectedDate,
           time: selectedTime,
           serviceName: selectedService,
-          token: randomId,
+          token: confirmedBookingId,
         });
       } catch (notifErr) {
-        console.warn('[Booking] Notification scheduling warning:', notifErr);
+        console.warn('[Booking] Notification scheduling notice:', notifErr);
       }
 
       setIsBooking(false);
-      setErrors({});
 
+      // 5. Navigate to confirmation pass only after backend confirms successful booking
       router.push({
         pathname: '/appointments/confirmation',
         params: {
@@ -299,18 +358,19 @@ export default function BookAppointmentScreen() {
           location: selectedLocation,
           date: selectedDate,
           time: selectedTime,
-          purpose,
-          bookingId: meta.bookingId || randomId,
-          token: verificationToken || '',
-          qrDataUrl: qrDataUrl || '',
+          purpose: purpose.trim(),
+          bookingId: confirmedBookingId,
+          token: verificationToken,
+          qrDataUrl,
           state: selectedState,
           district: selectedDistrict,
         },
       } as any);
     } catch (err: any) {
       setIsBooking(false);
+      console.error('[Appointment Booking Error]:', err);
       Alert.alert(
-        'Booking Not Permitted',
+        'Booking Failed',
         err.message || 'Unable to confirm appointment booking. Please check your connection and retry.'
       );
     }
@@ -628,7 +688,7 @@ export default function BookAppointmentScreen() {
             onPress={handleConfirmBooking}
             disabled={isBooking}
             activeOpacity={0.85}
-            style={{ minHeight: 56 }}
+            style={{ minHeight: 56, opacity: isBooking ? 0.75 : 1 }}
             className="w-full py-4.5 px-6 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
           >
             {isBooking ? (

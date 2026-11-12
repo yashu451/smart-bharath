@@ -8,7 +8,7 @@ if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-const COLLECTIONS = ['users', 'activities', 'grievances', 'documents', 'chat', 'saved_schemes'];
+const COLLECTIONS = ['users', 'activities', 'grievances', 'documents', 'chat', 'saved_schemes', 'appointments'];
 
 const store = {
   users: [],
@@ -17,6 +17,7 @@ const store = {
   documents: [],
   chat: [],
   saved_schemes: [],
+  appointments: [],
 };
 
 // Safe load from disk

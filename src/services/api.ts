@@ -1,6 +1,32 @@
 import { getAuthToken } from './storage';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000/api';
+// Production API URL deployed on Render
+export const PROD_API_URL = 'https://smart-bharath.onrender.com/api';
+
+const getApiBaseUrl = (): string => {
+  // 1. If explicit non-localhost URL is provided via build env, use it
+  if (process.env.EXPO_PUBLIC_API_URL && !process.env.EXPO_PUBLIC_API_URL.includes('localhost')) {
+    return process.env.EXPO_PUBLIC_API_URL.replace(/\/+$/, '');
+  }
+
+  // 2. In browser environments: if hostname is not localhost/127.0.0.1, ALWAYS use production URL
+  if (typeof window !== 'undefined' && window.location) {
+    const hostname = window.location.hostname;
+    if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      return PROD_API_URL;
+    }
+  }
+
+  // 3. In production mode, always use production URL
+  if (process.env.NODE_ENV === 'production') {
+    return PROD_API_URL;
+  }
+
+  // 4. Default to production URL or local development fallback
+  return (process.env.EXPO_PUBLIC_API_URL || PROD_API_URL).replace(/\/+$/, '');
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 interface ApiResponse<T = any> {
   success: boolean;
@@ -434,6 +460,50 @@ export const schemeApi = {
 };
 
 export const appointmentApi = {
+  bookAppointment: async (appointmentData: {
+    deptId: string;
+    deptName: string;
+    service: string;
+    location: string;
+    state: string;
+    stateName?: string;
+    district?: string;
+    date: string;
+    time: string;
+    purpose?: string;
+    bookingId?: string;
+  }) => {
+    return request('/appointments', {
+      method: 'POST',
+      body: JSON.stringify(appointmentData),
+    });
+  },
+
+  getMyAppointments: async () => {
+    return request('/appointments', {
+      method: 'GET',
+    });
+  },
+
+  getAppointmentById: async (id: string) => {
+    return request(`/appointments/${encodeURIComponent(id)}`, {
+      method: 'GET',
+    });
+  },
+
+  rescheduleAppointment: async (id: string, date: string, time: string) => {
+    return request(`/appointments/${encodeURIComponent(id)}/reschedule`, {
+      method: 'PATCH',
+      body: JSON.stringify({ date, time }),
+    });
+  },
+
+  cancelAppointment: async (id: string) => {
+    return request(`/appointments/${encodeURIComponent(id)}/cancel`, {
+      method: 'PATCH',
+    });
+  },
+
   verifyAppointment: async (tokenOrId: string) => {
     return request(`/appointments/verify/${encodeURIComponent(tokenOrId)}`, {
       method: 'GET',

@@ -2,13 +2,14 @@ const mongoose = require('mongoose');
 const crypto = require('crypto');
 const QRCode = require('qrcode');
 const Activity = require('../models/Activity');
+const Appointment = require('../models/Appointment');
 const Document = require('../models/Document');
 const {
   checkAppointmentDateAvailability,
   checkAppointmentTimeAvailability,
 } = require('../constants/officialHolidays');
 
-const { memoryActivities, saveToDisk } = require('../config/memoryStore');
+const { memoryActivities, memoryAppointments, saveToDisk } = require('../config/memoryStore');
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
@@ -348,6 +349,50 @@ const createActivity = async (req, res, next) => {
       memoryActivities.unshift(activity);
     }
     saveToDisk('activities');
+
+    // Also persist in Appointment collection if type is appointment
+    if (type === 'appointment') {
+      try {
+        const apptData = {
+          userId,
+          deptId: activityMetadata.deptId || 'passport',
+          deptName: title.trim(),
+          service: activityMetadata.service || subtitle || 'Public Service Visit',
+          location: activityMetadata.location || 'Central Civic Center',
+          state: (activityMetadata.state || 'ALL').toUpperCase(),
+          stateName: activityMetadata.stateName || '',
+          district: activityMetadata.district || '',
+          date: activityMetadata.date || getTodayISTString(),
+          time: activityMetadata.time || '10:00 AM',
+          purpose: activityMetadata.purpose || '',
+          bookingId: activityMetadata.bookingId || (token ? token.replace(/^Token:\s*/i, '').trim() : activity._id.toString()),
+          token: token || `Token: ${activityMetadata.bookingId || activity._id}`,
+          verificationToken: activityMetadata.verificationToken,
+          verificationUrl: activityMetadata.verificationUrl,
+          qrCodeDataUrl: activityMetadata.qrCodeDataUrl,
+          status: status || 'Upcoming',
+          statusColor: statusColor || '#000080',
+          statusBg: statusBg || '#EEF2FF',
+          icon: icon || '🛂',
+          isCancelled: status === 'Cancelled',
+          disclaimer: activityMetadata.disclaimer || 'Smart Bharat Internal Appointment Verification (Not Official Government Verification)',
+        };
+
+        if (isDbConnected()) {
+          try {
+            await Appointment.create(apptData);
+          } catch (e) {
+            console.warn('[Dashboard Appt Sync Mongo]:', e.message);
+          }
+        }
+        if (Array.isArray(memoryAppointments)) {
+          memoryAppointments.unshift({ _id: new mongoose.Types.ObjectId().toString(), ...apptData });
+          saveToDisk('appointments');
+        }
+      } catch (apptErr) {
+        console.warn('[Dashboard Appt Sync Warning]:', apptErr.message);
+      }
+    }
 
     res.status(201).json({
       success: true,

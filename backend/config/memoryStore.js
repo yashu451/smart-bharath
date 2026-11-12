@@ -8,6 +8,7 @@ module.exports = {
   memoryChat: persistentStore.store.chat,
   memoryGrievances: persistentStore.store.grievances,
   memorySavedSchemes: persistentStore.store.saved_schemes,
+  memoryAppointments: persistentStore.store.appointments,
   persistentStore,
   saveToDisk: persistentStore.saveToDisk,
 };
