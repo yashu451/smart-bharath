@@ -212,17 +212,10 @@ export default function SmartAIAssistantScreen() {
   const triggerAIResponse = async (userText: string, currentMessages: Message[]) => {
     setIsTyping(true);
 
-    const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
     const userLang = detectLanguageLocal(userText);
     const errMessage = getErrorMessageLocal(userLang);
     const action = getSuggestedAction(userText);
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    console.log('--- GEMINI API DEBUGGING ---');
-    console.log('Model Configured:', 'gemini-2.5-flash');
-    console.log('EXPO_PUBLIC_GEMINI_API_KEY length:', process.env.EXPO_PUBLIC_GEMINI_API_KEY ? process.env.EXPO_PUBLIC_GEMINI_API_KEY.length : 0);
-    console.log('GEMINI_API_KEY length:', process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.length : 0);
-    console.log('Resolved API Key length:', apiKey ? apiKey.length : 0);
 
     const applyErrorReply = (customNotice?: string) => {
       setIsTyping(false);
@@ -233,81 +226,82 @@ export default function SmartAIAssistantScreen() {
       ]);
     };
 
-    if (!apiKey || apiKey.trim() === '') {
-      const errorMsg = 'Gemini API key is not configured. Please verify your GEMINI_API_KEY environment variable.';
-      console.error(errorMsg);
-      applyErrorReply(errorMsg);
-      return;
-    }
-
     try {
-      // Map user/ai roles to user/model, filtering out the static welcome message at index 0 (msg.id === '1')
-      // to ensure the payload starts with the 'user' role and alternates correctly.
+      // Send chat message to backend (which securely connects to Gemini using process.env.GEMINI_API_KEY)
       const chatHistory = currentMessages
         .filter((msg) => msg.id !== '1')
         .map((msg) => ({
           role: msg.sender === 'user' ? 'user' : 'model',
-          parts: [{ text: msg.text }],
+          sender: msg.sender,
+          text: msg.text,
         }));
 
-      console.log('Sending request to Gemini API. Payload contents:', JSON.stringify(chatHistory, null, 2));
+      const res = await chatApi.sendMessage({
+        text: userText,
+        history: chatHistory,
+      });
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            contents: chatHistory,
-            systemInstruction: {
-              parts: [
-                {
-                  text: 'You are Smart Bharat AI, a helpful multilingual AI civic companion for the Smart Bharat app. Assist citizens with government schemes, DigiLocker certificates, civic grievances, and appointments. CRITICAL RULE: You MUST auto-detect the language of the user message and respond in the EXACT same language (English, Hindi, Kannada, Tamil, Telugu, Malayalam, or Marathi). NEVER translate the text or switch to English unless the user explicitly requests you to translate. Respond in a highly concise, professional, and premium tone.',
-                },
-              ],
-            },
-          }),
-        }
-      );
-
-      console.log('Gemini API HTTP Response Status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => 'No error response body text');
-        console.error('Gemini API request failed with status code:', response.status);
-        console.error('Gemini API response error body content:', errorText);
-        throw new Error(`API returned status ${response.status}: ${errorText}`);
+      if (res && res.success && res.reply) {
+        setIsTyping(false);
+        setMessages((prev) => [
+          ...prev,
+          { id: String(prev.length + 1), text: res.reply, sender: 'ai', timestamp: res.timestamp || timestamp, suggestedAction: action },
+        ]);
+      } else {
+        throw new Error(res.message || 'AI service did not return any reply.');
       }
-
-      const responseJson = await response.json();
-      console.log('Gemini API Response JSON:', JSON.stringify(responseJson, null, 2));
-
-      const aiResponse =
-        responseJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-      if (!aiResponse) {
-        throw new Error('Gemini API did not return any text contents.');
-      }
-
-      setIsTyping(false);
-      setMessages((prev) => [
-        ...prev,
-        { id: String(prev.length + 1), text: aiResponse, sender: 'ai', timestamp, suggestedAction: action },
-      ]);
-      // Persist Gemini AI response to MongoDB
-      chatApi
-        .saveMessage({
-          sender: 'ai',
-          text: aiResponse,
-          suggestedAction: action || null,
-          timestamp,
-        })
-        .catch((err) => console.warn('Could not persist Gemini AI message:', err));
     } catch (error: any) {
-      console.error('Gemini API call failed with exception:', error);
-      console.error('Actual Error Message:', error?.message || String(error));
+      console.warn('Backend Gemini assistant request note:', error?.message);
+
+      // Graceful fallback for local development if client key is present
+      const clientApiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+      if (clientApiKey && clientApiKey.trim()) {
+        try {
+          const chatHistory = currentMessages
+            .filter((msg) => msg.id !== '1')
+            .map((msg) => ({
+              role: msg.sender === 'user' ? 'user' : 'model',
+              parts: [{ text: msg.text }],
+            }));
+
+          const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${clientApiKey.trim()}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: chatHistory,
+                systemInstruction: {
+                  parts: [
+                    {
+                      text: 'You are Smart Bharat AI, a helpful multilingual AI civic companion for the Smart Bharat app. Assist citizens with government schemes, DigiLocker certificates, civic grievances, and appointments. CRITICAL RULE: You MUST auto-detect the language of the user message and respond in the EXACT same language (English, Hindi, Kannada, Tamil, Telugu, Malayalam, or Marathi). NEVER translate the text or switch to English unless the user explicitly requests you to translate. Respond in a highly concise, professional, and premium tone.',
+                    },
+                  ],
+                },
+              }),
+            }
+          );
+
+          if (response.ok) {
+            const responseJson = await response.json();
+            const aiResponse = responseJson.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (aiResponse) {
+              setIsTyping(false);
+              setMessages((prev) => [
+                ...prev,
+                { id: String(prev.length + 1), text: aiResponse, sender: 'ai', timestamp, suggestedAction: action },
+              ]);
+              chatApi
+                .saveMessage({ sender: 'ai', text: aiResponse, suggestedAction: action || null, timestamp })
+                .catch(() => {});
+              return;
+            }
+          }
+        } catch (directErr) {
+          console.warn('Direct fallback note:', directErr);
+        }
+      }
+
       applyErrorReply();
     }
   };

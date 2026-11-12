@@ -210,6 +210,13 @@ export const chatApi = {
     });
   },
 
+  sendMessage: async (payload: { text: string; history?: any[] }) => {
+    return request<{ success: boolean; reply: string; timestamp?: string }>('/chat/message', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
   saveMessage: async (payload: {
     sender: 'user' | 'ai';
     text: string;

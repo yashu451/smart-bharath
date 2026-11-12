@@ -51,3 +51,12 @@ Thumbs.db
 /android
 
 .env.production
+scripts/test-*.js
+scripts/test-*.ps1
+scripts/sync-*.js
+scripts/sync-*.ps1
+scripts/check-*.js
+scripts/check-*.ps1
+scripts/inspect-*.js
+scripts/gen-*.js
+scripts/restore-*.ps1
