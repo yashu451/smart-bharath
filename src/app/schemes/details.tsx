@@ -142,10 +142,10 @@ export default function SchemeDetailsScreen() {
           <View className="flex-row items-center flex-1 mr-3">
             <TouchableOpacity
               onPress={() => router.back()}
-              className="w-11 h-11 rounded-2xl bg-[#E0EDE1] border border-[#CADDCB] justify-center items-center mr-3.5 shadow-xs"
+              className="w-12 h-12 rounded-2xl bg-[#E0EDE1] border border-[#CADDCB] justify-center items-center mr-3.5 shadow-xs"
               activeOpacity={0.7}
             >
-              <Text className="text-[#14532D] font-black text-lg">←</Text>
+              <Text className="text-[#14532D] font-black text-xl">←</Text>
             </TouchableOpacity>
             <View className="flex-1">
               <Text className="text-xl font-black text-[#14532D]" numberOfLines={1}>
@@ -160,12 +160,12 @@ export default function SchemeDetailsScreen() {
           {/* Header Save Button */}
           <TouchableOpacity
             onPress={handleSaveToggle}
-            className={`w-11 h-11 rounded-2xl border ${
+            className={`w-12 h-12 rounded-2xl border ${
               isSaved ? 'bg-amber-50 border-amber-300' : 'bg-[#EDF5EE] border-[#CADDCB] shadow-xs'
             } justify-center items-center`}
             activeOpacity={0.7}
           >
-            <Text className="text-lg">{isSaved ? '★' : '☆'}</Text>
+            <Text className="text-xl">{isSaved ? '★' : '☆'}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -345,7 +345,7 @@ export default function SchemeDetailsScreen() {
           </View>
 
           {/* 5. Utility & Action Buttons Section */}
-          <View className="space-y-3.5 pt-2">
+          <View className="gap-3.5 pt-2">
             {scheme.hasOnlineApplication && scheme.applicationUrl ? (
               /* Active Apply Now Button */
               <View>
@@ -354,13 +354,14 @@ export default function SchemeDetailsScreen() {
                   activeOpacity={0.85}
                   style={{
                     backgroundColor: '#14532D',
+                    minHeight: 56,
                     shadowColor: '#14532D',
                     shadowOffset: { width: 0, height: 4 },
                     shadowOpacity: 0.15,
                     shadowRadius: 10,
                     elevation: 3,
                   }}
-                  className="w-full py-4.5 rounded-2xl justify-center items-center flex-row"
+                  className="w-full py-4.5 px-6 rounded-2xl justify-center items-center flex-row"
                 >
                   <Text className="text-white text-base font-black uppercase tracking-wider mr-2">
                     Apply Now on Official Portal
@@ -400,25 +401,27 @@ export default function SchemeDetailsScreen() {
             )}
 
             {/* Secondary Buttons Row */}
-            <View className="flex-row justify-between pt-1">
+            <View className="flex-row justify-between pt-1 gap-3">
               {/* Official Website */}
               <TouchableOpacity
                 onPress={handleVisitWebsite}
                 activeOpacity={0.7}
-                className="w-[48%] py-4 border border-[#CADDCB] bg-[#EDF5EE] rounded-2xl justify-center items-center shadow-xs flex-row"
+                style={{ minHeight: 50 }}
+                className="flex-1 py-4 px-4 border border-[#CADDCB] bg-[#EDF5EE] rounded-2xl justify-center items-center shadow-xs flex-row"
               >
-                <Text className="text-slate-700 text-sm font-bold mr-1">Official Website</Text>
-                <Text className="text-slate-500 text-sm">↗</Text>
+                <Text className="text-[#14532D] text-sm font-black mr-1.5">Official Website</Text>
+                <Text className="text-[#14532D] text-base font-black">↗</Text>
               </TouchableOpacity>
 
               {/* Share */}
               <TouchableOpacity
                 onPress={handleShare}
                 activeOpacity={0.7}
-                className="w-[48%] py-4 border border-[#CADDCB] bg-[#EDF5EE] rounded-2xl justify-center items-center shadow-xs flex-row"
+                style={{ minHeight: 50 }}
+                className="flex-1 py-4 px-4 border border-[#CADDCB] bg-[#EDF5EE] rounded-2xl justify-center items-center shadow-xs flex-row"
               >
-                <Text className="text-slate-700 text-sm font-bold mr-1">Share Portal</Text>
-                <Text className="text-slate-500 text-sm">🔗</Text>
+                <Text className="text-[#14532D] text-sm font-black mr-1.5">Share Portal</Text>
+                <Text className="text-slate-600 text-sm">🔗</Text>
               </TouchableOpacity>
             </View>
           </View>

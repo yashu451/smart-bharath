@@ -112,11 +112,12 @@ export default function DigiLockerHomeScreen() {
         </View>
 
         {/* Action Buttons Area */}
-        <View className="w-full max-w-xl mt-7 space-y-3.5">
+        <View className="w-full max-w-xl mt-7 gap-3.5">
           <TouchableOpacity
             onPress={() => router.push('/digilocker/documents' as any)}
             activeOpacity={0.85}
-            className="w-full py-4.5 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
+            style={{ minHeight: 56 }}
+            className="w-full py-4.5 px-6 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
           >
             <Text className="text-white text-base font-black uppercase tracking-wider">
               Open My Document Wallet →
@@ -126,7 +127,8 @@ export default function DigiLockerHomeScreen() {
           <TouchableOpacity
             onPress={handleFetchFromDigiLocker}
             activeOpacity={0.7}
-            className="w-full py-4 border border-[#CADDCB] bg-[#EDF5EE] rounded-2xl justify-center items-center shadow-xs"
+            style={{ minHeight: 52 }}
+            className="w-full py-4 px-6 border border-[#CADDCB] bg-[#EDF5EE] rounded-2xl justify-center items-center shadow-xs"
           >
             <Text className="text-slate-700 text-sm font-black uppercase tracking-wider">
               Fetch from DigiLocker (Coming Soon)

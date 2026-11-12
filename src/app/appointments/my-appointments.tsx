@@ -15,23 +15,16 @@ import { dashboardApi } from '@/services/api';
 import { CalendarDatePicker } from '@/components/appointments/CalendarDatePicker';
 import { calculateAppointmentCountdown, isFutureOrTodayIST } from '@/utils/date-time';
 import {
+  checkAppointmentDateAvailability,
+  OFFICIAL_APPOINTMENT_TIME_SLOTS,
+} from '@/constants/official-holidays';
+import {
   rescheduleAppointmentNotification,
   cancelAppointmentNotification,
   checkAndDeliverAppointmentReminders,
 } from '@/services/notificationService';
 
-const RESCHEDULE_TIME_SLOTS = [
-  '09:00 AM',
-  '09:30 AM',
-  '10:00 AM',
-  '10:30 AM',
-  '11:00 AM',
-  '11:30 AM',
-  '02:00 PM',
-  '02:30 PM',
-  '03:00 PM',
-  '03:30 PM',
-];
+const RESCHEDULE_TIME_SLOTS = OFFICIAL_APPOINTMENT_TIME_SLOTS;
 
 export interface ActivityRecord {
   _id: string;
@@ -154,6 +147,13 @@ export default function MyAppointmentsScreen() {
       return;
     }
 
+    const meta = rescheduleTarget.metadata || {};
+    const dateCheck = checkAppointmentDateAvailability(newDate, meta.state || 'ALL', meta.district || '');
+    if (!dateCheck.available) {
+      setRescheduleError(dateCheck.reason || 'Selected date is not an official public working day.');
+      return;
+    }
+
     if (!newTime) {
       setRescheduleError('Please select a time slot.');
       return;
@@ -163,7 +163,6 @@ export default function MyAppointmentsScreen() {
     setRescheduleError('');
 
     try {
-      const meta = rescheduleTarget.metadata || {};
       const updatedMeta = {
         ...meta,
         date: newDate,
@@ -203,6 +202,26 @@ export default function MyAppointmentsScreen() {
     } finally {
       setIsRescheduling(false);
     }
+  };
+
+  const handleViewGatepass = (act: ActivityRecord) => {
+    const meta = act.metadata || {};
+    router.push({
+      pathname: '/appointments/confirmation',
+      params: {
+        deptId: meta.deptId || 'passport',
+        service: meta.service || act.subtitle || 'Public Office Appointment',
+        location: meta.location || 'Central Civic Center',
+        date: meta.date || '',
+        time: meta.time || '',
+        purpose: meta.purpose || '',
+        bookingId: meta.bookingId || act.token?.replace(/^Token:\s*/i, '').trim() || act._id,
+        token: meta.verificationToken || act.token?.replace(/^Token:\s*/i, '').trim() || '',
+        qrDataUrl: meta.qrCodeDataUrl || '',
+        state: meta.state || 'ALL',
+        district: meta.district || '',
+      },
+    } as any);
   };
 
   const handleViewDetails = (act: ActivityRecord) => {
@@ -499,44 +518,48 @@ export default function MyAppointmentsScreen() {
                     <View className="pt-3.5 border-t border-[#CADDCB] mt-1">
                       {isUpcomingAppointment ? (
                         <View className="w-full">
-                          <View className="flex-row justify-between mb-3">
+                          <View className="flex-row justify-between mb-3 gap-3">
                             <TouchableOpacity
-                              onPress={() => handleViewDetails(act)}
-                              className="w-[48%] py-3.5 rounded-2xl justify-center items-center border border-[#CADDCB] bg-[#EDF5EE]"
+                              onPress={() => handleViewGatepass(act)}
+                              style={{ minHeight: 52 }}
+                              className="flex-1 py-3.5 px-4 rounded-2xl justify-center items-center border border-[#CADDCB] bg-[#EDF5EE]"
                               activeOpacity={0.7}
                             >
-                              <Text className="text-[#14532D] text-sm font-black">View Gatepass</Text>
+                              <Text className="text-[#14532D] text-base font-black">View Gatepass</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
                               onPress={() => handleOpenReschedule(act)}
-                              className="w-[48%] py-3.5 rounded-2xl justify-center items-center bg-[#14532D]"
+                              style={{ minHeight: 52 }}
+                              className="flex-1 py-3.5 px-4 rounded-2xl justify-center items-center bg-[#14532D]"
                               activeOpacity={0.8}
                             >
-                              <Text className="text-white text-sm font-black">Reschedule Slot 🗓️</Text>
+                              <Text className="text-white text-base font-black">Reschedule 🗓️</Text>
                             </TouchableOpacity>
                           </View>
 
                           <TouchableOpacity
                             onPress={() => handleCancelAppointment(act._id, act.title)}
-                            className="w-full py-3 border border-red-200 bg-red-50/70 rounded-2xl justify-center items-center"
+                            style={{ minHeight: 50 }}
+                            className="w-full py-3.5 px-4 border border-red-200 bg-red-50/70 rounded-2xl justify-center items-center"
                             activeOpacity={0.7}
                           >
-                            <Text className="text-red-600 text-sm font-black">Cancel Appointment</Text>
+                            <Text className="text-red-600 text-base font-black">Cancel Appointment</Text>
                           </TouchableOpacity>
                         </View>
                       ) : (
-                        <View className="flex-row justify-between">
+                        <View className="flex-row justify-between gap-3">
                           <TouchableOpacity
                             onPress={() => handleViewDetails(act)}
-                            className={`py-3.5 rounded-2xl justify-center items-center ${
+                            style={{ minHeight: 52 }}
+                            className={`py-3.5 px-4 rounded-2xl justify-center items-center ${
                               act.type === 'grievance' || act.type === 'document' || act.type === 'scheme'
-                                ? 'w-[48%]'
+                                ? 'flex-1'
                                 : 'w-full'
                             } border border-[#CADDCB] bg-[#EDF5EE]`}
                             activeOpacity={0.7}
                           >
-                            <Text className="text-[#14532D] text-sm font-black">View Details</Text>
+                            <Text className="text-[#14532D] text-base font-black">View Details</Text>
                           </TouchableOpacity>
 
                           {act.type === 'grievance' && (
@@ -548,7 +571,8 @@ export default function MyAppointmentsScreen() {
                                   params: { token: tokenVal },
                                 } as any);
                               }}
-                              className="w-[48%] py-3.5 border border-amber-200 bg-amber-50/70 rounded-2xl justify-center items-center"
+                              style={{ minHeight: 48 }}
+                              className="flex-1 py-3.5 px-4 border border-amber-200 bg-amber-50/70 rounded-2xl justify-center items-center"
                               activeOpacity={0.7}
                             >
                               <Text className="text-amber-800 text-sm font-black">Track Status →</Text>
@@ -558,7 +582,8 @@ export default function MyAppointmentsScreen() {
                           {act.type === 'document' && (
                             <TouchableOpacity
                               onPress={() => router.push('/digilocker/documents' as any)}
-                              className="w-[48%] py-3.5 border border-indigo-200 bg-indigo-50/70 rounded-2xl justify-center items-center"
+                              style={{ minHeight: 48 }}
+                              className="flex-1 py-3.5 px-4 border border-indigo-200 bg-indigo-50/70 rounded-2xl justify-center items-center"
                               activeOpacity={0.7}
                             >
                               <Text className="text-indigo-800 text-sm font-black">DigiLocker →</Text>
@@ -574,7 +599,8 @@ export default function MyAppointmentsScreen() {
                                   router.push('/schemes/recommendations' as any);
                                 }
                               }}
-                              className="w-[48%] py-3.5 border border-emerald-200 bg-emerald-50/70 rounded-2xl justify-center items-center"
+                              style={{ minHeight: 48 }}
+                              className="flex-1 py-3.5 px-4 border border-emerald-200 bg-emerald-50/70 rounded-2xl justify-center items-center"
                               activeOpacity={0.7}
                             >
                               <Text className="text-emerald-800 text-sm font-black">View Portal →</Text>
@@ -592,7 +618,8 @@ export default function MyAppointmentsScreen() {
           {/* Return Button */}
           <TouchableOpacity
             onPress={() => router.replace('/home')}
-            className="mt-7 border border-[#CADDCB] py-4 rounded-2xl justify-center items-center bg-[#EDF5EE] shadow-xs"
+            style={{ minHeight: 52 }}
+            className="mt-7 border border-[#CADDCB] py-4 px-6 rounded-2xl justify-center items-center bg-[#EDF5EE] shadow-xs"
             activeOpacity={0.7}
           >
             <Text className="text-[#14532D] font-black text-sm uppercase tracking-wider">
@@ -629,22 +656,24 @@ export default function MyAppointmentsScreen() {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 10 }}>
-              {/* Interactive Calendar Date Picker with IST constraints */}
+              {/* Interactive Calendar Date Picker with IST constraints & Holiday Awareness */}
               <CalendarDatePicker
                 selectedDate={newDate}
                 onSelectDate={(dt) => {
                   setNewDate(dt);
                   setRescheduleError('');
                 }}
+                stateCode={rescheduleTarget?.metadata?.state || 'ALL'}
+                districtName={rescheduleTarget?.metadata?.district || ''}
                 errorMessage={rescheduleError}
               />
 
               {/* Time Slots Picker */}
               <View style={{ marginTop: 14, backgroundColor: '#EDF5EE', borderRadius: 18, borderWidth: 1, borderColor: '#CADDCB', padding: 14 }}>
-                <Text style={{ fontSize: 12, fontWeight: '900', color: '#14532D', marginBottom: 10 }}>
+                <Text style={{ fontSize: 13, fontWeight: '900', color: '#14532D', marginBottom: 10 }}>
                   Available Time Slots (IST) *
                 </Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                   {RESCHEDULE_TIME_SLOTS.map((slot) => {
                     const isSelected = newTime === slot;
                     return (
@@ -655,18 +684,21 @@ export default function MyAppointmentsScreen() {
                           setRescheduleError('');
                         }}
                         style={{
-                          paddingHorizontal: 12,
-                          paddingVertical: 8,
-                          borderRadius: 12,
+                          minHeight: 42,
+                          paddingHorizontal: 14,
+                          paddingVertical: 10,
+                          borderRadius: 14,
                           backgroundColor: isSelected ? '#14532D' : '#F3F8F4',
                           borderWidth: 1,
                           borderColor: isSelected ? '#14532D' : '#CADDCB',
+                          justifyContent: 'center',
+                          alignItems: 'center',
                         }}
                         activeOpacity={0.7}
                       >
                         <Text
                           style={{
-                            fontSize: 11,
+                            fontSize: 12.5,
                             fontWeight: '800',
                             color: isSelected ? '#FFFFFF' : '#334155',
                           }}
@@ -686,21 +718,24 @@ export default function MyAppointmentsScreen() {
               ) : null}
 
               {/* Action Buttons */}
-              <View style={{ flexDirection: 'row', gap: 10, marginTop: 18 }}>
+              <View style={{ flexDirection: 'row', gap: 12, marginTop: 18 }}>
                 <TouchableOpacity
                   onPress={() => setRescheduleModalVisible(false)}
                   style={{
                     flex: 1,
-                    paddingVertical: 12,
-                    borderRadius: 14,
+                    minHeight: 50,
+                    paddingVertical: 14,
+                    paddingHorizontal: 16,
+                    borderRadius: 16,
                     borderWidth: 1,
                     borderColor: '#CADDCB',
                     backgroundColor: '#EDF5EE',
                     alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                   activeOpacity={0.7}
                 >
-                  <Text style={{ color: '#4B6350', fontSize: 12, fontWeight: '800' }}>Cancel</Text>
+                  <Text style={{ color: '#4B6350', fontSize: 14, fontWeight: '800' }}>Cancel</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -708,8 +743,10 @@ export default function MyAppointmentsScreen() {
                   disabled={isRescheduling}
                   style={{
                     flex: 2,
-                    paddingVertical: 12,
-                    borderRadius: 14,
+                    minHeight: 52,
+                    paddingVertical: 14,
+                    paddingHorizontal: 20,
+                    borderRadius: 16,
                     backgroundColor: '#14532D',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -719,7 +756,7 @@ export default function MyAppointmentsScreen() {
                   {isRescheduling ? (
                     <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
-                    <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '900' }}>
+                    <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                       Confirm Reschedule →
                     </Text>
                   )}

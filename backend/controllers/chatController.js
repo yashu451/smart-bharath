@@ -11,11 +11,17 @@ const isDbConnected = () => mongoose.connection.readyState === 1;
 const getChatHistory = async (req, res, next) => {
   try {
     const userId = (req.user._id || req.user.id).toString();
+    const userObjId = mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : userId;
     let messages = [];
 
     if (isDbConnected()) {
       try {
-        messages = await ChatMessage.find({ userId }).sort({ createdAt: 1 });
+        messages = await ChatMessage.find({
+          $or: [
+            { userId: userObjId },
+            { userId: userId }
+          ]
+        }).sort({ createdAt: 1 });
       } catch (dbErr) {
         console.warn('[Chat] Mongo fallback:', dbErr.message);
         messages = memoryChat.filter((m) => (m.userId?.toString() || m.userId) === userId);
@@ -130,10 +136,18 @@ const saveChatMessage = async (req, res, next) => {
 const clearChatHistory = async (req, res, next) => {
   try {
     const userId = (req.user._id || req.user.id).toString();
+    const userObjId = mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : userId;
     if (isDbConnected()) {
       try {
-        await ChatMessage.deleteMany({ userId });
-      } catch {}
+        await ChatMessage.deleteMany({
+          $or: [
+            { userId: userObjId },
+            { userId: userId }
+          ]
+        });
+      } catch (dbErr) {
+        console.warn('[Clear Chat] Mongo error:', dbErr.message);
+      }
     }
     const filtered = memoryChat.filter((m) => (m.userId?.toString() || m.userId) !== userId);
     memoryChat.length = 0;

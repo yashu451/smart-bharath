@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, StatusBar } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  Image,
+  ActivityIndicator,
+  Platform,
+} from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import QRCode from 'qrcode';
 import { DEPARTMENTS_DB } from '@/constants/appointment-departments';
 import { formatISTDate, calculateAppointmentCountdown, getTodayIST } from '@/utils/date-time';
 
@@ -14,14 +25,66 @@ export default function AppointmentConfirmationScreen() {
   const selectedDate = (params.date as string) || getTodayIST();
   const selectedTime = (params.time as string) || '09:00 AM';
   const bookingId = (params.bookingId as string) || 'APT-SB-804918';
+  const paramToken = (params.token as string) || '';
+  const paramQrDataUrl = (params.qrDataUrl as string) || '';
 
   const [tokenNumber, setTokenNumber] = useState('');
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>(paramQrDataUrl);
+  const [isGeneratingQr, setIsGeneratingQr] = useState<boolean>(!paramQrDataUrl);
 
   useEffect(() => {
     const hash = bookingId.split('-').pop() || '100';
     const num = parseInt(hash.replace(/[^0-9]/g, ''), 10) || 418;
     setTokenNumber(`TKN-${(num % 900) + 100}`);
   }, [bookingId]);
+
+  // Ensure real, scannable QR code is always generated
+  useEffect(() => {
+    let isMounted = true;
+
+    async function ensureQr() {
+      if (paramQrDataUrl) {
+        setQrCodeUrl(paramQrDataUrl);
+        setIsGeneratingQr(false);
+        return;
+      }
+
+      setIsGeneratingQr(true);
+      try {
+        const origin =
+          Platform.OS === 'web' && typeof window !== 'undefined'
+            ? window.location.origin
+            : 'http://localhost:8082';
+        const verifyTarget = `${origin}/appointments/verify?id=${encodeURIComponent(bookingId)}&token=${encodeURIComponent(paramToken || bookingId)}`;
+
+        const generatedUrl = await QRCode.toDataURL(verifyTarget, {
+          errorCorrectionLevel: 'M',
+          margin: 2,
+          width: 256,
+          color: {
+            dark: '#14532D',
+            light: '#FFFFFF',
+          },
+        });
+
+        if (isMounted) {
+          setQrCodeUrl(generatedUrl);
+          setIsGeneratingQr(false);
+        }
+      } catch (err) {
+        console.warn('[Confirmation] QR code generation warning:', err);
+        if (isMounted) {
+          setIsGeneratingQr(false);
+        }
+      }
+    }
+
+    ensureQr();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [paramQrDataUrl, bookingId, paramToken]);
 
   const readableDate = formatISTDate(selectedDate);
   const countdown = calculateAppointmentCountdown(selectedDate, selectedTime);
@@ -164,24 +227,75 @@ export default function AppointmentConfirmationScreen() {
                 </Text>
               </View>
 
-              {/* QR Representation */}
+              {/* REAL SCANNABLE QR CODE SECTION */}
               <View className="mt-3 p-5 bg-[#EDF5EE] border border-dashed border-[#CADDCB] rounded-2xl items-center">
-                <View className="w-28 h-28 bg-[#F3F8F4] border border-[#CADDCB] rounded-2xl justify-center items-center shadow-xs">
-                  <Text className="text-4xl">🏁</Text>
-                </View>
-                <Text className="text-xs text-slate-600 font-medium text-center mt-2.5">
-                  Scan this digital gatepass QR at the reception gate.
+                {isGeneratingQr ? (
+                  <View className="w-44 h-44 bg-[#F3F8F4] border border-[#CADDCB] rounded-2xl justify-center items-center shadow-xs">
+                    <ActivityIndicator size="small" color="#14532D" />
+                    <Text className="text-xs text-[#14532D] font-bold mt-2">
+                      Generating scannable QR...
+                    </Text>
+                  </View>
+                ) : qrCodeUrl ? (
+                  <View className="p-3 bg-white rounded-2xl border border-[#CADDCB] shadow-xs items-center">
+                    <Image
+                      source={{ uri: qrCodeUrl }}
+                      style={{ width: 160, height: 160 }}
+                      resizeMode="contain"
+                    />
+                  </View>
+                ) : (
+                  <View className="w-44 h-44 bg-[#F3F8F4] border border-[#CADDCB] rounded-2xl justify-center items-center shadow-xs">
+                    <Text className="text-3xl">🛂</Text>
+                    <Text className="text-xs text-slate-500 font-bold mt-2">QR Code Ready</Text>
+                  </View>
+                )}
+
+                <Text className="text-xs font-black text-[#14532D] text-center mt-3">
+                  Scannable Digital Gatepass QR
                 </Text>
+                <Text className="text-[11px] text-slate-600 font-medium text-center mt-1">
+                  Scan with any phone camera or QR reader to open Smart Bharat gatepass verification.
+                </Text>
+
+                {/* Instant Verification Shortcut Button */}
+                <TouchableOpacity
+                  onPress={() => {
+                    router.push({
+                      pathname: '/appointments/verify',
+                      params: {
+                        id: bookingId,
+                        token: paramToken || bookingId,
+                      },
+                    } as any);
+                  }}
+                  style={{ minHeight: 46 }}
+                  className="mt-3.5 px-5 py-2.5 rounded-xl bg-[#14532D] border border-[#14532D] items-center justify-center flex-row shadow-xs"
+                  activeOpacity={0.8}
+                >
+                  <Text className="text-white text-xs font-black uppercase tracking-wider mr-1.5">
+                    Open Verification Page
+                  </Text>
+                  <Text className="text-white text-sm font-black">↗</Text>
+                </TouchableOpacity>
+
+                {/* Internal Verification Notice */}
+                <View className="mt-3.5 bg-[#FFFBEB] border border-[#FDE68A] rounded-xl p-3 w-full">
+                  <Text className="text-[10px] text-amber-900 font-bold leading-normal text-center">
+                    🛡️ Smart Bharat Internal Verification Pass: Verifies portal registration. Not an official government dispatch confirmation.
+                  </Text>
+                </View>
               </View>
             </View>
           </View>
 
           {/* Action Buttons */}
-          <View className="w-full mt-7 space-y-3.5">
+          <View className="w-full mt-7 gap-3.5">
             <TouchableOpacity
               onPress={() => router.push('/appointments/my-appointments' as any)}
               activeOpacity={0.85}
-              className="w-full py-4.5 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
+              style={{ minHeight: 56 }}
+              className="w-full py-4.5 px-6 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
             >
               <Text className="text-white text-base font-black uppercase tracking-wider">
                 View in Activity Center →
@@ -191,7 +305,8 @@ export default function AppointmentConfirmationScreen() {
             <TouchableOpacity
               onPress={() => router.replace('/home')}
               activeOpacity={0.7}
-              className="w-full py-4 border border-[#CADDCB] bg-[#EDF5EE] rounded-2xl justify-center items-center shadow-xs"
+              style={{ minHeight: 52 }}
+              className="w-full py-4 px-6 border border-[#CADDCB] bg-[#EDF5EE] rounded-2xl justify-center items-center shadow-xs"
             >
               <Text className="text-[#14532D] text-sm font-black uppercase tracking-wider">
                 Back to Dashboard

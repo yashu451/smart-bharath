@@ -24,6 +24,7 @@ const documentRoutes = require('./routes/documentRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const grievanceRoutes = require('./routes/grievanceRoutes');
 const schemeRoutes = require('./routes/schemeRoutes');
+const appointmentRoutes = require('./routes/appointmentRoutes');
 
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
@@ -32,6 +33,7 @@ app.use('/api/documents', documentRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/grievances', grievanceRoutes);
 app.use('/api/schemes', schemeRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
 // Root route
 app.get('/', (req, res) => {

@@ -774,7 +774,118 @@ const evaluateGuidance = ({ state, district, city, category, description, exactL
   }
 
   // =========================================================================
-  // 5. DEFAULT STATE / CENTRAL FALLBACK (ALL-INDIA)
+  // 5. UTTAR PRADESH STATE & DISTRICTS
+  // =========================================================================
+  if (normState.includes('uttar pradesh') || normState.includes('up')) {
+    return {
+      authorityName: 'Government of Uttar Pradesh – Chief Minister Office & IGRS',
+      portalName: 'Jansunwai (Integrated Grievance Redressal System UP)',
+      portalUrl: 'https://jansunwai.up.nic.in',
+      trackingUrl: 'https://jansunwai.up.nic.in',
+      helpline: '1076 (CM Helpline Uttar Pradesh)',
+      expectedTimelineDays: 30,
+      officialTimelineNotice: 'Jansunwai petitions are monitored directly by the Chief Minister Office and District Magistrates.',
+      whyAppropriate: `Jansunwai is the unified grievance redressal portal of Uttar Pradesh connecting all state departments, municipal corporations, and district collectors for ${district || 'all districts'}.`,
+      filingInstructions: [
+        '1. Visit jansunwai.up.nic.in.',
+        '2. Click "Register Grievance" and verify mobile with OTP.',
+        '3. Select department and district.',
+        '4. Submit petition and note down your Jansunwai reference number.'
+      ],
+      requiredDocuments: ['Mobile number', 'Aadhaar / ID proof', 'Application details'],
+      isDistrictSpecific: false,
+      jurisdictionLevel: 'State Alternative'
+    };
+  }
+
+  // =========================================================================
+  // 6. TELANGANA STATE & DISTRICTS
+  // =========================================================================
+  if (normState.includes('telangana')) {
+    if (normLoc.includes('hyderabad') && (normCat.includes('road') || normCat.includes('waste') || normCat.includes('garbage') || normCat.includes('sanitation') || normCat.includes('civic') || normCat.includes('streetlight'))) {
+      return {
+        authorityName: 'Greater Hyderabad Municipal Corporation (GHMC)',
+        portalName: 'GHMC Citizen Grievance Portal',
+        portalUrl: 'https://ghmc.gov.in',
+        trackingUrl: 'https://ghmc.gov.in',
+        helpline: '040-21111111 (GHMC 24x7 Call Centre)',
+        expectedTimelineDays: 15,
+        officialTimelineNotice: 'GHMC citizen charter specifies 15-day resolution for civic infrastructure and sanitation issues.',
+        whyAppropriate: 'GHMC has statutory jurisdiction over roads, sanitation, solid waste, and municipal services across Hyderabad and Secunderabad.',
+        filingInstructions: ['1. Access ghmc.gov.in.', '2. Select your GHMC circle/ward.', '3. Register your grievance and note token.'],
+        requiredDocuments: ['GHMC Circle/Ward details', 'Site photograph'],
+        isDistrictSpecific: true,
+        jurisdictionLevel: 'District Authority',
+        alternative: {
+          authorityName: 'Government of Telangana – Prajavani',
+          portalName: 'Prajavani Telangana Portal',
+          portalUrl: 'https://prajavani.telangana.gov.in',
+          trackingUrl: 'https://prajavani.telangana.gov.in',
+          helpline: '1100',
+          expectedTimelineDays: 30,
+          whyAppropriate: 'State-level portal connecting directly to the District Collector.'
+        }
+      };
+    }
+
+    return {
+      authorityName: 'Government of Telangana – Planning Department & CMO',
+      portalName: 'Prajavani Public Grievance Redressal Portal',
+      portalUrl: 'https://prajavani.telangana.gov.in',
+      trackingUrl: 'https://prajavani.telangana.gov.in',
+      helpline: '1100 (Telangana Prajavani Call Centre)',
+      expectedTimelineDays: 30,
+      officialTimelineNotice: 'Prajavani grievances are monitored by the CMO and respective District Collectors.',
+      whyAppropriate: `Prajavani is the single-window grievance platform for Telangana state connecting citizens to district administration in ${district || 'Telangana'}.`,
+      filingInstructions: ['1. Visit prajavani.telangana.gov.in.', '2. Register citizen profile and submit grievance.'],
+      requiredDocuments: ['Mobile number', 'Supporting description'],
+      isDistrictSpecific: false,
+      jurisdictionLevel: 'State Alternative'
+    };
+  }
+
+  // =========================================================================
+  // 7. ANDHRA PRADESH STATE & DISTRICTS
+  // =========================================================================
+  if (normState.includes('andhra')) {
+    return {
+      authorityName: 'Government of Andhra Pradesh – Public Grievance Redressal System',
+      portalName: 'Spandana Public Grievance Portal',
+      portalUrl: 'https://spandana.ap.gov.in',
+      trackingUrl: 'https://spandana.ap.gov.in',
+      helpline: '1902 (Spandana Toll-Free Call Centre)',
+      expectedTimelineDays: 30,
+      officialTimelineNotice: 'Spandana mandates time-bound resolution with weekly reviews by Joint Collectors and District Collectors.',
+      whyAppropriate: `Spandana is the apex public grievance portal for Andhra Pradesh covering all districts including ${district || 'statewide'}.`,
+      filingInstructions: ['1. Visit spandana.ap.gov.in or call 1902.', '2. Provide Aadhaar/mobile.', '3. Register complaint and obtain token.'],
+      requiredDocuments: ['Aadhaar number', 'Mobile number'],
+      isDistrictSpecific: false,
+      jurisdictionLevel: 'State Alternative'
+    };
+  }
+
+  // =========================================================================
+  // 8. KERALA STATE & DISTRICTS
+  // =========================================================================
+  if (normState.includes('kerala')) {
+    return {
+      authorityName: 'Government of Kerala – Chief Minister\'s Office',
+      portalName: 'CMO Public Grievance Redressal Cell',
+      portalUrl: 'https://cmo.kerala.gov.in',
+      trackingUrl: 'https://cmo.kerala.gov.in',
+      helpline: '1076 (Kerala CMO Grievance Helpline)',
+      expectedTimelineDays: 30,
+      officialTimelineNotice: 'Petitions are assigned directly to the District Collector and District Officers with strict 30-day timeline.',
+      whyAppropriate: `Chief Minister's Public Grievance Redressal Cell is Kerala's apex platform for citizen complaints across ${district || 'all districts'}.`,
+      filingInstructions: ['1. Visit cmo.kerala.gov.in.', '2. Submit your online petition with Aadhaar/mobile verification.'],
+      requiredDocuments: ['Mobile number', 'Petition details in Malayalam or English'],
+      isDistrictSpecific: false,
+      jurisdictionLevel: 'State Alternative'
+    };
+  }
+
+  // =========================================================================
+  // 9. DEFAULT STATE / CENTRAL FALLBACK (ALL-INDIA)
   // =========================================================================
   return {
     authorityName: 'Government of India – Department of Administrative Reforms & Public Grievances (DARPG)',

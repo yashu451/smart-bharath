@@ -182,7 +182,7 @@ export default function RecommendedSchemesScreen() {
                 </View>
 
                 {/* Action Buttons Section */}
-                <View className="space-y-2.5 mt-2">
+                <View className="gap-3 mt-2">
                   {scheme.hasOnlineApplication && scheme.applicationUrl ? (
                     <View>
                       <TouchableOpacity
@@ -190,25 +190,29 @@ export default function RecommendedSchemesScreen() {
                         activeOpacity={0.85}
                         style={{
                           backgroundColor: '#14532D',
+                          minHeight: 56,
                           shadowColor: '#14532D',
-                          shadowOffset: { width: 0, height: 3 },
-                          shadowOpacity: 0.12,
-                          shadowRadius: 8,
-                          elevation: 2,
+                          shadowOffset: { width: 0, height: 4 },
+                          shadowOpacity: 0.15,
+                          shadowRadius: 10,
+                          elevation: 3,
                         }}
-                        className="w-full py-4 rounded-2xl justify-center items-center flex-row"
+                        className="w-full py-4.5 px-6 rounded-2xl justify-center items-center flex-row"
                       >
-                        <Text className="text-white text-sm font-black uppercase tracking-wider mr-2">
+                        <Text className="text-white text-base font-black uppercase tracking-wider mr-2">
                           Apply Now on Official Portal
                         </Text>
-                        <Text className="text-white text-base font-black">↗</Text>
+                        <Text className="text-white text-lg font-black">↗</Text>
                       </TouchableOpacity>
                       <Text className="text-xs font-medium text-slate-500 text-center mt-2">
                         Portal: <Text className="font-bold text-[#14532D]">{scheme.applicationUrl.replace('https://', '').split('/')[0]}</Text> 🇮🇳
                       </Text>
                     </View>
                   ) : (
-                    <View className="w-full py-3 px-4 bg-amber-50 border border-amber-200 rounded-2xl flex-row items-center justify-between">
+                    <View
+                      style={{ minHeight: 48 }}
+                      className="w-full py-3.5 px-4 bg-amber-50 border border-amber-200 rounded-2xl flex-row items-center justify-between"
+                    >
                       <View className="flex-row items-center flex-1 mr-2">
                         <Text className="text-amber-800 text-sm mr-2">ℹ</Text>
                         <Text className="text-sm font-bold text-amber-900" numberOfLines={1}>
@@ -222,7 +226,8 @@ export default function RecommendedSchemesScreen() {
                   <TouchableOpacity
                     onPress={() => handleViewDetails(scheme.id)}
                     activeOpacity={0.7}
-                    className="w-full py-3.5 border border-[#CADDCB] bg-[#EDF5EE] rounded-2xl justify-center items-center shadow-xs mt-1"
+                    style={{ minHeight: 50 }}
+                    className="w-full py-4 px-6 border border-[#CADDCB] bg-[#EDF5EE] rounded-2xl justify-center items-center shadow-xs"
                   >
                     <Text className="text-[#14532D] text-sm font-black uppercase tracking-wider">
                       View Scheme Details & Criteria →
@@ -236,10 +241,11 @@ export default function RecommendedSchemesScreen() {
           {/* Retake Questionnaire Link */}
           <TouchableOpacity
             onPress={() => router.push('/schemes/questionnaire' as any)}
-            className="mt-6 border border-[#CADDCB] py-4.5 rounded-2xl justify-center items-center bg-[#EDF5EE] shadow-xs"
+            style={{ minHeight: 52 }}
+            className="mt-6 border border-[#CADDCB] py-4.5 px-6 rounded-2xl justify-center items-center bg-[#EDF5EE] shadow-xs"
             activeOpacity={0.7}
           >
-            <Text className="text-[#14532D] font-black text-sm uppercase tracking-wider">
+            <Text className="text-[#14532D] font-black text-base uppercase tracking-wider">
               Re-run Eligibility Questionnaire
             </Text>
           </TouchableOpacity>

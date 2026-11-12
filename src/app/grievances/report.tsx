@@ -12,9 +12,10 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  Modal,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { INDIAN_STATES, COMPLAINT_CATEGORIES, StateOption } from '@/constants/grievance-routing';
+import { INDIAN_STATES, COMPLAINT_CATEGORIES, StateOption, resolvePortalDestination } from '@/constants/grievance-routing';
 import { grievanceApi, GrievanceGuidance } from '@/services/api';
 
 export default function GrievanceGuidanceScreen() {
@@ -53,20 +54,65 @@ export default function GrievanceGuidanceScreen() {
   const [guidance, setGuidance] = useState<GrievanceGuidance | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Submission Confirmation State
+  const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
+  const [savedConfirmationData, setSavedConfirmationData] = useState<{
+    referenceNumber: string;
+    portalName: string;
+    category: string;
+    submissionDate: string;
+    title: string;
+    expectedTimelineDays: number | string;
+  } | null>(null);
+
   const currentStateObj = INDIAN_STATES.find((s) => s.value === selectedState) || INDIAN_STATES[0];
 
   // Helper to open external official government URLs in browser
   const openExternalUrl = async (url: string) => {
-    if (!url) return;
+    if (!url || !url.startsWith('http')) {
+      Alert.alert(
+        'Official Portal Notice',
+        'No verified official government portal URL could be identified for this jurisdiction.'
+      );
+      return;
+    }
     try {
       if (Platform.OS === 'web') {
-        window.open(url, '_blank', 'noopener,noreferrer');
+        if (typeof window !== 'undefined') {
+          const win = window.open(url, '_blank', 'noopener,noreferrer');
+          if (!win) {
+            window.location.href = url;
+          }
+        }
       } else {
-        await Linking.openURL(url);
+        const canOpen = await Linking.canOpenURL(url);
+        if (canOpen) {
+          await Linking.openURL(url);
+        } else {
+          await Linking.openURL(url);
+        }
       }
-    } catch {
+    } catch (err) {
+      console.warn('Failed to open external portal url:', err);
       Alert.alert('Official Portal Link', `Official portal URL:\n${url}`);
     }
+  };
+
+  // Direct Civic Grievance Portal navigation using selected State, District, and Category
+  const handleDirectOpenPortal = () => {
+    if (!selectedState) {
+      Alert.alert('Selection Required', 'Please select your State to identify the official government portal.');
+      return;
+    }
+    const dest = resolvePortalDestination(selectedState, district, category, city, exactLocation);
+    if (!dest || !dest.portalUrl || !dest.portalUrl.startsWith('http')) {
+      Alert.alert(
+        'Official Portal Notice',
+        `A verified official portal could not be identified for ${district || selectedState}. Please check with your local municipal corporation or district administration.`
+      );
+      return;
+    }
+    openExternalUrl(dest.portalUrl);
   };
 
   // Step 1 -> Step 2: Fetch Guidance
@@ -155,16 +201,23 @@ export default function GrievanceGuidanceScreen() {
       });
 
       if (res.success) {
-        Alert.alert(
-          'Complaint Recorded',
-          `Reference ${referenceNumber.trim()} has been saved in your personal tracking dashboard.`,
-          [
-            {
-              text: 'View My Complaints',
-              onPress: () => router.replace('/grievances/track' as any),
-            },
-          ]
-        );
+        const formattedDate = res.grievance?.submissionDate
+          ? new Date(res.grievance.submissionDate).toLocaleDateString('en-IN', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+            })
+          : submissionDate;
+
+        setSavedConfirmationData({
+          referenceNumber: res.grievance?.referenceNumber || referenceNumber.trim(),
+          portalName: res.grievance?.portalName || portalName.trim(),
+          category: res.grievance?.category || category,
+          submissionDate: formattedDate,
+          title: res.grievance?.title || title.trim(),
+          expectedTimelineDays: res.grievance?.expectedTimelineDays || expectedTimelineDays,
+        });
+        setShowSuccessModal(true);
       } else {
         throw new Error(res.message || 'Server was unable to save complaint.');
       }
@@ -399,26 +452,43 @@ export default function GrievanceGuidanceScreen() {
                 </View>
               </View>
 
-              {/* Action Button */}
-              <TouchableOpacity
-                onPress={handleAnalyzeAndGuide}
-                disabled={isLoadingGuidance}
-                activeOpacity={0.85}
-                className="w-full py-4.5 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
-              >
-                {isLoadingGuidance ? (
-                  <View className="flex-row items-center">
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                    <Text className="text-white text-base font-black uppercase tracking-wider ml-2">
-                      Identifying Official Portal...
+              {/* Action Buttons Row on Step 1 */}
+              <View className="space-y-4 mt-3">
+                {/* Primary Button: Identify Official Portal & Detailed Guidance */}
+                <TouchableOpacity
+                  onPress={handleAnalyzeAndGuide}
+                  disabled={isLoadingGuidance}
+                  activeOpacity={0.85}
+                  style={{ minHeight: 56 }}
+                  className="w-full py-4.5 px-6 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
+                >
+                  {isLoadingGuidance ? (
+                    <View className="flex-row items-center">
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                      <Text className="text-white text-base font-black uppercase tracking-wider ml-2.5">
+                        Identifying Official Portal...
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text className="text-white text-base font-black uppercase tracking-wider">
+                      Identify Official Portal & Guidance →
                     </Text>
-                  </View>
-                ) : (
-                  <Text className="text-white text-base font-black uppercase tracking-wider">
-                    Identify Official Portal & Guidance →
+                  )}
+                </TouchableOpacity>
+
+                {/* Direct Portal Button: Determine destination using State, District & Category */}
+                <TouchableOpacity
+                  onPress={handleDirectOpenPortal}
+                  activeOpacity={0.85}
+                  style={{ minHeight: 52 }}
+                  className="w-full py-4 px-6 bg-[#EDF5EE] border-2 border-[#14532D] rounded-2xl justify-center items-center flex-row shadow-xs"
+                >
+                  <Text className="text-xl mr-2.5">🌐</Text>
+                  <Text className="text-[#14532D] text-base font-black uppercase tracking-wider">
+                    Open Official Portal for {district || selectedState} ↗
                   </Text>
-                )}
-              </TouchableOpacity>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
 
@@ -563,10 +633,11 @@ export default function GrievanceGuidanceScreen() {
                     </Text>
                     <TouchableOpacity
                       onPress={() => openExternalUrl(guidance.alternative!.portalUrl)}
-                      className="px-4 py-2 bg-[#14532D] rounded-xl"
+                      style={{ minHeight: 46 }}
+                      className="px-5 py-3 bg-[#14532D] rounded-xl justify-center items-center"
                       activeOpacity={0.8}
                     >
-                      <Text className="text-xs font-black text-white uppercase">Open Alternative ↗</Text>
+                      <Text className="text-sm font-black text-white uppercase">Open Alternative ↗</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -574,21 +645,26 @@ export default function GrievanceGuidanceScreen() {
 
               {/* Big Continue to Official Portal Button */}
               <TouchableOpacity
-                onPress={() => openExternalUrl(guidance.portalUrl)}
+                onPress={() => {
+                  const targetUrl = guidance?.portalUrl || resolvePortalDestination(selectedState, district, category, city, exactLocation).portalUrl;
+                  openExternalUrl(targetUrl);
+                }}
                 activeOpacity={0.85}
-                className="w-full py-4.5 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs mb-3.5 flex-row"
+                style={{ minHeight: 56 }}
+                className="w-full py-4.5 px-6 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs mb-4 flex-row"
               >
-                <Text className="text-white text-base font-black uppercase tracking-wider mr-2">
+                <Text className="text-white text-base font-black uppercase tracking-wider mr-2.5">
                   Continue to Official Government Portal
                 </Text>
-                <Text className="text-white text-base">➔</Text>
+                <Text className="text-white text-lg font-black">➔</Text>
               </TouchableOpacity>
 
               {/* Proceed to Record Token */}
               <TouchableOpacity
                 onPress={handleProceedToSaveRef}
                 activeOpacity={0.75}
-                className="w-full py-4 border border-[#14532D] bg-[#EDF5EE] rounded-2xl justify-center items-center"
+                style={{ minHeight: 54 }}
+                className="w-full py-4 px-6 border-2 border-[#14532D] bg-[#EDF5EE] rounded-2xl justify-center items-center"
               >
                 <Text className="text-[#14532D] text-sm font-black uppercase tracking-wider">
                   Submitted? Save Complaint Reference Number →
@@ -721,10 +797,16 @@ export default function GrievanceGuidanceScreen() {
                 onPress={handleSaveComplaint}
                 disabled={isSaving}
                 activeOpacity={0.85}
-                className="w-full py-4.5 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
+                style={{ minHeight: 56 }}
+                className="w-full py-4.5 px-6 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
               >
                 {isSaving ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
+                  <View className="flex-row items-center">
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                    <Text className="text-white text-base font-black uppercase tracking-wider ml-2.5">
+                      Saving Complaint...
+                    </Text>
+                  </View>
                 ) : (
                   <Text className="text-white text-base font-black uppercase tracking-wider">
                     Save Complaint & Start Tracking →
@@ -736,6 +818,96 @@ export default function GrievanceGuidanceScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* COMPLAINT SUBMISSION SUCCESS CONFIRMATION MODAL */}
+      <Modal
+        visible={showSuccessModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          // Keep confirmation visible until the user explicitly clicks Done
+        }}
+      >
+        <View className="flex-1 bg-black/60 justify-center items-center px-6">
+          <View className="w-full max-w-lg bg-[#F3F8F4] border border-[#CADDCB] rounded-3xl p-7 shadow-2xl">
+            {/* Success Icon */}
+            <View className="w-16 h-16 rounded-3xl bg-[#DCFCE7] border-2 border-[#86EFAC] justify-center items-center mb-4 self-center shadow-xs">
+              <Text className="text-3xl">✅</Text>
+            </View>
+
+            {/* Clear Heading */}
+            <Text className="text-2xl font-black text-[#14532D] text-center mb-2 tracking-tight">
+              Complaint Saved Successfully!
+            </Text>
+
+            {/* Short Confirmation Message */}
+            <Text className="text-sm font-medium text-slate-600 text-center mb-6 leading-relaxed">
+              Your complaint has been successfully recorded in your personal tracking dashboard. Smart Bharat will calculate your waiting periods and notify you of upcoming deadlines.
+            </Text>
+
+            {/* Complaint Details Card */}
+            <View className="bg-white/90 border border-[#CADDCB] rounded-2xl p-5 mb-6 space-y-3.5">
+              <View className="flex-row justify-between items-center pb-3 border-b border-[#E2E8F0]">
+                <Text className="text-xs font-bold text-slate-500 uppercase tracking-wider">Reference Number</Text>
+                <Text className="text-base font-black text-[#14532D]">
+                  {savedConfirmationData?.referenceNumber}
+                </Text>
+              </View>
+
+              <View className="flex-row justify-between items-center pb-3 border-b border-[#E2E8F0]">
+                <Text className="text-xs font-bold text-slate-500 uppercase tracking-wider">Complaint Title</Text>
+                <Text className="text-sm font-bold text-slate-800 flex-1 text-right ml-4" numberOfLines={2}>
+                  {savedConfirmationData?.title}
+                </Text>
+              </View>
+
+              <View className="flex-row justify-between items-center pb-3 border-b border-[#E2E8F0]">
+                <Text className="text-xs font-bold text-slate-500 uppercase tracking-wider">Category</Text>
+                <Text className="text-sm font-bold text-slate-800" numberOfLines={1}>
+                  {savedConfirmationData?.category}
+                </Text>
+              </View>
+
+              <View className="flex-row justify-between items-center pb-3 border-b border-[#E2E8F0]">
+                <Text className="text-xs font-bold text-slate-500 uppercase tracking-wider">Government Portal</Text>
+                <Text className="text-sm font-black text-slate-800 flex-1 text-right ml-4">
+                  {savedConfirmationData?.portalName}
+                </Text>
+              </View>
+
+              <View className="flex-row justify-between items-center">
+                <Text className="text-xs font-bold text-slate-500 uppercase tracking-wider">Submission Date</Text>
+                <Text className="text-sm font-bold text-slate-800">
+                  {savedConfirmationData?.submissionDate}
+                </Text>
+              </View>
+            </View>
+
+            {/* Prominent Done Button */}
+            <TouchableOpacity
+              onPress={() => {
+                setShowSuccessModal(false);
+                router.replace('/grievances/track' as any);
+              }}
+              activeOpacity={0.85}
+              style={{
+                minHeight: 56,
+                backgroundColor: '#14532D',
+                shadowColor: '#14532D',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.18,
+                shadowRadius: 10,
+                elevation: 3,
+              }}
+              className="w-full py-4.5 rounded-2xl justify-center items-center"
+            >
+              <Text className="text-white text-base font-black uppercase tracking-wider">
+                Done
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

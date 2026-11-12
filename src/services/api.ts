@@ -433,6 +433,24 @@ export const schemeApi = {
   },
 };
 
+export const appointmentApi = {
+  verifyAppointment: async (tokenOrId: string) => {
+    return request(`/appointments/verify/${encodeURIComponent(tokenOrId)}`, {
+      method: 'GET',
+    });
+  },
+
+  getHolidays: async (year?: number, state?: string) => {
+    const params = new URLSearchParams();
+    if (year) params.append('year', String(year));
+    if (state) params.append('state', state);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return request(`/appointments/holidays${qs}`, {
+      method: 'GET',
+    });
+  },
+};
+
 
 
 

@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { grievanceApi, GrievanceRecord } from '@/services/api';
+import { resolvePortalDestination } from '@/constants/grievance-routing';
 
 export default function MyComplaintsScreen() {
   const router = useRouter();
@@ -62,6 +63,10 @@ export default function MyComplaintsScreen() {
     }
   }, []);
 
+  useEffect(() => {
+    fetchComplaints();
+  }, [fetchComplaints]);
+
   useFocusEffect(
     useCallback(() => {
       fetchComplaints();
@@ -69,15 +74,58 @@ export default function MyComplaintsScreen() {
   );
 
   const openExternalUrl = async (url: string) => {
-    if (!url) return;
+    if (!url || !url.startsWith('http')) {
+      Alert.alert(
+        'Official Portal Notice',
+        'No verified official government portal URL could be identified for this record.'
+      );
+      return;
+    }
     try {
       if (Platform.OS === 'web') {
-        window.open(url, '_blank', 'noopener,noreferrer');
+        if (typeof window !== 'undefined') {
+          const win = window.open(url, '_blank', 'noopener,noreferrer');
+          if (!win) {
+            window.location.href = url;
+          }
+        }
       } else {
-        await Linking.openURL(url);
+        const canOpen = await Linking.canOpenURL(url);
+        if (canOpen) {
+          await Linking.openURL(url);
+        } else {
+          await Linking.openURL(url);
+        }
       }
-    } catch {
+    } catch (err) {
+      console.warn('Failed to open external url:', err);
       Alert.alert('Official Portal Link', `Official portal URL:\n${url}`);
+    }
+  };
+
+  const handleOpenPortal = (c: GrievanceRecord) => {
+    // 1. Resolve verified routing destination using State, District, Category, City, exactLocation
+    const dest = resolvePortalDestination(c.state, c.district, c.category, c.city, c.exactLocation);
+
+    // 2. Select target URL: prioritize verified routing destination or saved portalUrl / trackingUrl
+    let targetUrl = '';
+    if (c.portalUrl && c.portalUrl.startsWith('http') && c.portalUrl !== 'https://pgportal.gov.in') {
+      targetUrl = c.portalUrl;
+    } else if (dest?.portalUrl && dest.portalUrl.startsWith('http')) {
+      targetUrl = dest.portalUrl;
+    } else if (c.portalUrl && c.portalUrl.startsWith('http')) {
+      targetUrl = c.portalUrl;
+    } else if (c.trackingUrl && c.trackingUrl.startsWith('http')) {
+      targetUrl = c.trackingUrl;
+    }
+
+    if (targetUrl) {
+      openExternalUrl(targetUrl);
+    } else {
+      Alert.alert(
+        'Official Portal Notice',
+        `A verified official online grievance portal is not registered for ${c.district || c.state || 'this jurisdiction'}. Please check with your local municipal administration or call 1800-11-4000.`
+      );
     }
   };
 
@@ -210,10 +258,11 @@ export default function MyComplaintsScreen() {
           </View>
           <TouchableOpacity
             onPress={() => router.push({ pathname: '/grievances/report', params: { mode: 'save_only' } } as any)}
-            className="px-4 py-2.5 bg-[#14532D] rounded-xl shadow-xs"
+            style={{ minHeight: 50 }}
+            className="px-6 py-3.5 bg-[#14532D] rounded-2xl shadow-xs justify-center items-center flex-row"
             activeOpacity={0.8}
           >
-            <Text className="text-white text-xs font-black">+ Add</Text>
+            <Text className="text-white text-base font-black">+ Log Complaint</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -305,10 +354,11 @@ export default function MyComplaintsScreen() {
               </Text>
               <TouchableOpacity
                 onPress={() => router.push('/grievances/report' as any)}
-                className="mt-7 bg-[#14532D] px-7 py-4 rounded-2xl shadow-xs"
+                style={{ minHeight: 52 }}
+                className="mt-7 bg-[#14532D] px-8 py-4 rounded-2xl shadow-xs justify-center items-center"
                 activeOpacity={0.8}
               >
-                <Text className="text-white font-black text-sm uppercase tracking-wider">
+                <Text className="text-white font-black text-base uppercase tracking-wider">
                   Find Portal & File Grievance →
                 </Text>
               </TouchableOpacity>
@@ -339,26 +389,35 @@ export default function MyComplaintsScreen() {
                       </View>
 
                       {/* Citizen Status Pill */}
-                      <View className="bg-[#FFF7ED] border border-[#FED7AA] px-3 py-1 rounded-full flex-row items-center">
-                        <Text className="text-[10px] font-bold text-amber-900 mr-1.5">Citizen Record:</Text>
+                      <View className="bg-[#FFF7ED] border border-[#FED7AA] px-3.5 py-1.5 rounded-full flex-row items-center">
+                        <Text className="text-xs font-bold text-amber-900 mr-1.5">Status:</Text>
                         <Text className="text-xs font-black text-[#D97706] uppercase">
                           {c.citizenStatus || 'Awaiting Updates'}
                         </Text>
                       </View>
                     </View>
 
-                    {/* Title & Category */}
+                    {/* Complaint Title */}
                     <View className="pb-3.5 border-b border-[#CADDCB]">
-                      <Text className="text-lg font-black text-[#14532D] leading-snug">
+                      <Text className="text-xl font-black text-[#14532D] leading-snug">
                         {c.title}
-                      </Text>
-                      <Text className="text-sm text-slate-600 font-semibold mt-1">
-                        {c.category} • {c.state} {c.district ? `(${c.district})` : ''}
                       </Text>
                     </View>
 
-                    {/* Government Portal & Waiting Days Analysis */}
+                    {/* Key Details Grid */}
                     <View className="py-3.5 space-y-2.5 border-b border-[#CADDCB]">
+                      <View className="flex-row justify-between items-center">
+                        <Text className="text-sm text-slate-600 font-medium">State & District:</Text>
+                        <Text className="text-sm font-bold text-slate-800">
+                          {c.district ? `${c.district}, ${c.state}` : c.state}
+                        </Text>
+                      </View>
+
+                      <View className="flex-row justify-between items-center">
+                        <Text className="text-sm text-slate-600 font-medium">Category:</Text>
+                        <Text className="text-sm font-bold text-slate-800">{c.category}</Text>
+                      </View>
+
                       <View className="flex-row justify-between items-center">
                         <Text className="text-sm text-slate-600 font-medium">Official Portal:</Text>
                         <Text className="text-sm font-black text-[#14532D]">{c.portalName}</Text>
@@ -375,11 +434,11 @@ export default function MyComplaintsScreen() {
                         </Text>
                       </View>
 
-                      {/* Days Elapsed Pill */}
+                      {/* Waiting Period Pill */}
                       <View className="flex-row justify-between items-center">
                         <Text className="text-sm text-slate-600 font-medium">Waiting Period:</Text>
                         <View
-                          className={`px-3 py-1 rounded-full ${
+                          className={`px-3.5 py-1.5 rounded-full ${
                             isOverdue ? 'bg-red-100 border border-red-300' : 'bg-emerald-100 border border-emerald-300'
                           }`}
                         >
@@ -388,7 +447,7 @@ export default function MyComplaintsScreen() {
                               isOverdue ? 'text-red-700' : 'text-emerald-800'
                             }`}
                           >
-                            {c.daysElapsed} Days Elapsed
+                            {c.daysElapsed} {c.daysElapsed === 1 ? 'Day Waiting' : 'Days Waiting'}
                           </Text>
                         </View>
                       </View>
@@ -403,7 +462,7 @@ export default function MyComplaintsScreen() {
 
                       {/* Overdue Alert if applicable */}
                       {isOverdue && (
-                        <View className="bg-red-50 border border-red-200 p-3 rounded-2xl mt-1.5">
+                        <View className="bg-red-50 border border-red-200 p-3.5 rounded-2xl mt-1.5">
                           <Text className="text-xs font-black text-red-700">
                             ⚠️ Exceeded Published Timeline by {c.daysOverdue} Days
                           </Text>
@@ -415,13 +474,14 @@ export default function MyComplaintsScreen() {
                     </View>
 
                     {/* Action Buttons */}
-                    <View className="flex-row justify-between pt-3.5">
+                    <View className="flex-row gap-3 pt-4">
                       <TouchableOpacity
-                        onPress={() => openExternalUrl(c.trackingUrl || c.portalUrl)}
+                        onPress={() => handleOpenPortal(c)}
                         activeOpacity={0.8}
-                        className="w-[31%] py-3 bg-[#14532D] rounded-xl justify-center items-center shadow-xs"
+                        style={{ minHeight: 52 }}
+                        className="flex-1 py-3.5 px-4 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs flex-row"
                       >
-                        <Text className="text-white text-xs font-black uppercase tracking-wider">
+                        <Text className="text-white text-base font-black uppercase tracking-wider">
                           Portal ↗
                         </Text>
                       </TouchableOpacity>
@@ -429,19 +489,21 @@ export default function MyComplaintsScreen() {
                       <TouchableOpacity
                         onPress={() => handleOpenEditModal(c)}
                         activeOpacity={0.8}
-                        className="w-[36%] py-3 border border-[#CADDCB] bg-[#EDF5EE] rounded-xl justify-center items-center"
+                        style={{ minHeight: 52 }}
+                        className="flex-1 py-3.5 px-4 border border-[#CADDCB] bg-[#EDF5EE] rounded-2xl justify-center items-center flex-row"
                       >
-                        <Text className="text-[#14532D] text-xs font-black uppercase tracking-wider">
-                          Edit Details ✍️
+                        <Text className="text-[#14532D] text-base font-black uppercase tracking-wider">
+                          Edit ✍️
                         </Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity
                         onPress={() => handlePromptDelete(c)}
                         activeOpacity={0.8}
-                        className="w-[28%] py-3 border border-red-200 bg-red-50 rounded-xl justify-center items-center"
+                        style={{ minHeight: 52 }}
+                        className="py-3.5 px-5 border border-red-200 bg-red-50 rounded-2xl justify-center items-center flex-row"
                       >
-                        <Text className="text-red-700 text-xs font-black uppercase tracking-wider">
+                        <Text className="text-red-700 text-base font-black uppercase tracking-wider">
                           Delete 🗑️
                         </Text>
                       </TouchableOpacity>
@@ -609,20 +671,37 @@ export default function MyComplaintsScreen() {
               )}
             </ScrollView>
 
-            {/* Save Button */}
-            <TouchableOpacity
-              onPress={handleSaveEdit}
-              disabled={isUpdating}
-              className="w-full py-3.5 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
-            >
-              {isUpdating ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Text className="text-white text-xs font-black uppercase tracking-wider">
-                  Save Changes
-                </Text>
-              )}
-            </TouchableOpacity>
+            {/* Edit Modal Action Buttons */}
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                onPress={() => setShowEditModal(false)}
+                disabled={isUpdating}
+                style={{ minHeight: 52 }}
+                className="flex-1 py-3.5 bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl justify-center items-center"
+              >
+                <Text className="text-base font-black text-slate-700 uppercase tracking-wider">Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={handleSaveEdit}
+                disabled={isUpdating}
+                style={{ minHeight: 52 }}
+                className="flex-1 py-3.5 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
+              >
+                {isUpdating ? (
+                  <View className="flex-row items-center">
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                    <Text className="text-white text-base font-black uppercase tracking-wider ml-2">
+                      Saving...
+                    </Text>
+                  </View>
+                ) : (
+                  <Text className="text-white text-base font-black uppercase tracking-wider">
+                    Save Changes
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -661,20 +740,22 @@ export default function MyComplaintsScreen() {
               <TouchableOpacity
                 onPress={() => setShowDeleteModal(false)}
                 disabled={isDeleting}
-                className="flex-1 py-3 bg-[#EDF5EE] border border-[#CADDCB] rounded-xl justify-center items-center"
+                style={{ minHeight: 52 }}
+                className="flex-1 py-3.5 bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl justify-center items-center"
               >
-                <Text className="text-xs font-black text-slate-700">Cancel</Text>
+                <Text className="text-base font-black text-slate-700 uppercase tracking-wider">Cancel</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={handleConfirmDelete}
                 disabled={isDeleting}
-                className="flex-1 py-3 bg-red-600 rounded-xl justify-center items-center"
+                style={{ minHeight: 52 }}
+                className="flex-1 py-3.5 bg-red-600 rounded-2xl justify-center items-center"
               >
                 {isDeleting ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
-                  <Text className="text-xs font-black text-white">Delete Record</Text>
+                  <Text className="text-base font-black text-white uppercase tracking-wider">Delete Record</Text>
                 )}
               </TouchableOpacity>
             </View>

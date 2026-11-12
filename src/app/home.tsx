@@ -286,8 +286,12 @@ export default function HomeScreen() {
       if (dashRes.status === 'fulfilled' && dashRes.value.success) {
         if (dashRes.value.user) setUser(dashRes.value.user);
         if (Array.isArray(dashRes.value.recentActivities)) {
-          setRecentActivities(dashRes.value.recentActivities);
-          setUnreadNotifications(dashRes.value.recentActivities.length > 0 ? Math.min(dashRes.value.recentActivities.length, 5) : 0);
+          // Strictly exclude AI Assistant chat messages and chat-history events from Recent Activities
+          const verifiedRecent = dashRes.value.recentActivities.filter(
+            (act: any) => act.type !== 'assistant' && act.type !== 'chat' && !act.route?.includes('/assistant')
+          );
+          setRecentActivities(verifiedRecent);
+          setUnreadNotifications(verifiedRecent.length > 0 ? Math.min(verifiedRecent.length, 5) : 0);
         }
         if (Array.isArray(dashRes.value.upcomingAppointments)) {
           setUpcomingAppointments(dashRes.value.upcomingAppointments);
@@ -3455,9 +3459,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF2F2',
     borderWidth: 1,
     borderColor: '#FCA5A5',
+    minHeight: 52,
     paddingVertical: 14,
+    paddingHorizontal: 20,
     borderRadius: 16,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   profileLogoutText: {
     fontSize: 15,

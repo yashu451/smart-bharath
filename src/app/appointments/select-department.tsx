@@ -79,8 +79,11 @@ export default function SelectDepartmentScreen() {
                 </View>
 
                 {/* Action forward indicator */}
-                <View className="bg-[#EDF5EE] border border-[#CADDCB] px-3.5 py-2 rounded-xl">
-                  <Text className="text-sm font-bold text-[#14532D]">→</Text>
+                <View
+                  style={{ minHeight: 46, minWidth: 46 }}
+                  className="bg-[#EDF5EE] border border-[#CADDCB] px-4 py-3 rounded-2xl justify-center items-center"
+                >
+                  <Text className="text-base font-black text-[#14532D]">→</Text>
                 </View>
               </TouchableOpacity>
             ))}

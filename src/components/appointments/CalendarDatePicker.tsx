@@ -7,12 +7,20 @@ import {
   StyleSheet,
 } from 'react-native';
 import { getTodayIST, formatISTDate } from '@/utils/date-time';
+import {
+  checkAppointmentDateAvailability,
+  OFFICIAL_HOLIDAYS,
+  DateAvailabilityResult,
+} from '@/constants/official-holidays';
 
 interface CalendarDatePickerProps {
   selectedDate: string; // YYYY-MM-DD
   onSelectDate: (date: string) => void;
   minDate?: string; // YYYY-MM-DD (defaults to today in IST)
   errorMessage?: string;
+  stateCode?: string; // 'ALL', 'KA', 'TN', 'MH', 'DL', 'UP'
+  districtName?: string;
+  onDateAvailabilityChange?: (availability: DateAvailabilityResult) => void;
 }
 
 const MONTH_NAMES = [
@@ -27,15 +35,20 @@ export const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
   onSelectDate,
   minDate = getTodayIST(),
   errorMessage,
+  stateCode = 'ALL',
+  districtName = '',
+  onDateAvailabilityChange,
 }) => {
   // Current view month & year state
   const initialDate = selectedDate ? new Date(`${selectedDate}T00:00:00`) : new Date(`${minDate}T00:00:00`);
   const [currentYear, setCurrentYear] = useState<number>(initialDate.getFullYear() || 2026);
   const [currentMonth, setCurrentMonth] = useState<number>(initialDate.getMonth() || 10); // 0-indexed
+  const [holidayNotice, setHolidayNotice] = useState<string | null>(null);
 
   const todayIST = getTodayIST();
 
   const handlePrevMonth = () => {
+    setHolidayNotice(null);
     if (currentMonth === 0) {
       setCurrentMonth(11);
       setCurrentYear(currentYear - 1);
@@ -45,6 +58,7 @@ export const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
   };
 
   const handleNextMonth = () => {
+    setHolidayNotice(null);
     if (currentMonth === 11) {
       setCurrentMonth(0);
       setCurrentYear(currentYear + 1);
@@ -72,12 +86,42 @@ export const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
     calendarCells.push({ day: d, dateStr, isCurrentMonth: true });
   }
 
+  // Month-specific Gazetted Holidays for the currently viewed month
+  const monthHolidays = OFFICIAL_HOLIDAYS.filter((h) => {
+    if (h.year !== currentYear) return false;
+    const parts = h.date.split('-');
+    const m = parseInt(parts[1], 10) - 1;
+    if (m !== currentMonth) return false;
+    if (h.state === 'ALL') return true;
+    if (stateCode && stateCode !== 'ALL' && h.state === stateCode) return true;
+    return false;
+  });
+
+  const handleCellPress = (cellDateStr: string, isPastDate: boolean, availability: DateAvailabilityResult) => {
+    if (isPastDate) {
+      setHolidayNotice('Selected date is in the past. Please select today or a future working date.');
+      return;
+    }
+    if (!availability.available) {
+      setHolidayNotice(availability.reason || 'Government offices are closed on this date.');
+      return;
+    }
+    setHolidayNotice(null);
+    onSelectDate(cellDateStr);
+    if (onDateAvailabilityChange) {
+      onDateAvailabilityChange(availability);
+    }
+  };
+
   return (
     <View style={styles.container}>
+      {/* Header Row */}
       <View style={styles.headerRow}>
-        <View>
+        <View style={{ flex: 1, minWidth: 200 }}>
           <Text style={styles.headerTitle}>Select Appointment Date</Text>
-          <Text style={styles.headerSubtitle}>Valid future dates in Indian Standard Time (IST)</Text>
+          <Text style={styles.headerSubtitle}>
+            Holiday-aware schedule • Indian Standard Time (IST)
+          </Text>
         </View>
 
         {/* Month Navigation */}
@@ -115,7 +159,8 @@ export const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
             <Text
               style={[
                 styles.weekdayText,
-                idx === 0 && { color: '#EF4444' }, // Red for Sunday (Closed)
+                idx === 0 && { color: '#EF4444' }, // Red for Sunday
+                idx === 6 && { color: '#F97316' }, // Orange for Saturday
               ]}
             >
               {w}
@@ -132,21 +177,28 @@ export const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
           }
 
           const isPastDate = cell.dateStr < minDate;
-          const isSunday = new Date(`${cell.dateStr}T12:00:00Z`).getUTCDay() === 0;
           const isToday = cell.dateStr === todayIST;
           const isSelected = cell.dateStr === selectedDate;
-          const isDisabled = isPastDate || isSunday;
+
+          const availability = checkAppointmentDateAvailability(cell.dateStr, stateCode, districtName);
+          const isHoliday = !!availability.holidayName;
+          const isSundayOff = !!availability.isSunday;
+          const isSatClosed = !!availability.isSecondFourthSaturday;
+          const isClosed = !availability.available;
+
+          const isDisabled = isPastDate || isClosed;
 
           return (
             <TouchableOpacity
               key={cell.dateStr}
-              disabled={isDisabled}
-              onPress={() => onSelectDate(cell.dateStr)}
+              onPress={() => handleCellPress(cell.dateStr, isPastDate, availability)}
               style={[
                 styles.dayCell,
                 isSelected && styles.dayCellSelected,
                 isToday && !isSelected && styles.dayCellToday,
-                isDisabled && styles.dayCellDisabled,
+                isHoliday && !isSelected && !isPastDate && styles.dayCellHoliday,
+                (isSundayOff || isSatClosed) && !isSelected && !isPastDate && styles.dayCellWeekendClosed,
+                isPastDate && styles.dayCellPast,
               ]}
               activeOpacity={0.75}
             >
@@ -155,31 +207,127 @@ export const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
                   styles.dayText,
                   isSelected && styles.dayTextSelected,
                   isToday && !isSelected && styles.dayTextToday,
-                  isDisabled && styles.dayTextDisabled,
-                  isSunday && !isDisabled && { color: '#EF4444' },
+                  isHoliday && !isSelected && styles.dayTextHoliday,
+                  isSundayOff && !isSelected && { color: '#DC2626' },
+                  isSatClosed && !isSelected && { color: '#B45309' },
+                  isPastDate && styles.dayTextPast,
                 ]}
               >
                 {cell.day}
               </Text>
-              {isSunday && (
-                <Text style={styles.closedTag}>Closed</Text>
+
+              {/* Tag / Indicator below day number */}
+              {isHoliday && !isSelected && (
+                <View style={styles.holidayTagPill}>
+                  <Text style={styles.holidayTagText} numberOfLines={1}>
+                    Holiday
+                  </Text>
+                </View>
+              )}
+
+              {isSundayOff && !isSelected && (
+                <Text style={styles.closedTag}>Sunday</Text>
+              )}
+
+              {isSatClosed && !isSelected && (
+                <Text style={styles.satClosedTag}>Closed</Text>
               )}
             </TouchableOpacity>
           );
         })}
       </View>
 
+      {/* Holiday / Closed Day Alert Banner when tapped */}
+      {holidayNotice ? (
+        <View style={styles.holidayAlertBanner}>
+          <Text style={styles.holidayAlertIcon}>ℹ️</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.holidayAlertTitle}>Date Not Available for Booking</Text>
+            <Text style={styles.holidayAlertText}>{holidayNotice}</Text>
+          </View>
+          <TouchableOpacity onPress={() => setHolidayNotice(null)} style={styles.holidayAlertClose}>
+            <Text style={{ fontSize: 12, fontWeight: '900', color: '#B45309' }}>✕</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
+      {/* Selected Date Confirmation Pill */}
+      {selectedDate ? (
+        <View style={styles.selectedPill}>
+          <Text style={styles.selectedPillIcon}>🗓️</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.selectedPillText}>
+              Selected Date: <Text style={{ fontWeight: '900', color: '#14532D' }}>{formatISTDate(selectedDate)} (IST)</Text>
+            </Text>
+            <Text style={styles.selectedPillSub}>
+              🟢 Official Working Day • Counter Hours: 09:00 AM – 04:00 PM IST
+            </Text>
+          </View>
+        </View>
+      ) : null}
+
+      {/* Validation Error Message */}
+      {errorMessage ? (
+        <Text style={styles.errorText}>⚠️ {errorMessage}</Text>
+      ) : null}
+
+      {/* Calendar Visual Legend */}
+      <View style={styles.legendRow}>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: '#14532D' }]} />
+          <Text style={styles.legendLabel}>Working Day</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: '#F59E0B' }]} />
+          <Text style={styles.legendLabel}>Gazetted Holiday</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: '#EF4444' }]} />
+          <Text style={styles.legendLabel}>Sunday / 2nd-4th Sat</Text>
+        </View>
+      </View>
+
+      {/* Gazetted Public Holidays for This Month */}
+      {monthHolidays.length > 0 && (
+        <View style={styles.monthHolidaysBox}>
+          <View style={styles.monthHolidaysHeader}>
+            <Text style={styles.monthHolidaysTitle}>
+              🏛️ Verified Public Holidays in {MONTH_NAMES[currentMonth]} {currentYear}
+            </Text>
+          </View>
+          {monthHolidays.map((h, idx) => (
+            <View key={idx} style={styles.monthHolidayItem}>
+              <View style={styles.monthHolidayDateBadge}>
+                <Text style={styles.monthHolidayDateText}>{h.date.split('-')[2]}</Text>
+                <Text style={styles.monthHolidayMonthText}>{MONTH_NAMES[currentMonth].slice(0, 3)}</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.monthHolidayName}>{h.name}</Text>
+                <Text style={styles.monthHolidaySource}>Source: {h.source}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+
       {/* Direct Native Date Input on Web */}
       {Platform.OS === 'web' && (
         <View style={styles.nativeWebInputRow}>
-          <Text style={styles.nativeWebLabel}>Or pick directly from system calendar:</Text>
+          <Text style={styles.nativeWebLabel}>System Calendar Picker:</Text>
           <input
             type="date"
             min={minDate}
             value={selectedDate}
             onChange={(e: any) => {
               if (e.target && e.target.value) {
-                onSelectDate(e.target.value);
+                const val = e.target.value;
+                const check = checkAppointmentDateAvailability(val, stateCode, districtName);
+                if (check.available) {
+                  onSelectDate(val);
+                  setHolidayNotice(null);
+                } else {
+                  setHolidayNotice(check.reason || 'Selected date is a holiday or weekend closure.');
+                }
               }
             }}
             style={{
@@ -197,21 +345,6 @@ export const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
           />
         </View>
       )}
-
-      {/* Selected Date Confirmation Pill */}
-      {selectedDate ? (
-        <View style={styles.selectedPill}>
-          <Text style={styles.selectedPillIcon}>🗓️</Text>
-          <Text style={styles.selectedPillText}>
-            Scheduled for: <Text style={{ fontWeight: '900', color: '#14532D' }}>{formatISTDate(selectedDate)} (IST)</Text>
-          </Text>
-        </View>
-      ) : null}
-
-      {/* Validation Error Message */}
-      {errorMessage ? (
-        <Text style={styles.errorText}>⚠️ {errorMessage}</Text>
-      ) : null}
     </View>
   );
 };
@@ -300,7 +433,7 @@ const styles = StyleSheet.create({
   },
   dayCell: {
     width: `${100 / 7}%`,
-    height: 44,
+    height: 48,
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: 2,
@@ -319,11 +452,20 @@ const styles = StyleSheet.create({
     borderColor: '#10B981',
     backgroundColor: '#ECFDF5',
   },
-  dayCellDisabled: {
+  dayCellHoliday: {
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  dayCellWeekendClosed: {
+    backgroundColor: '#F8FAFC',
+    opacity: 0.75,
+  },
+  dayCellPast: {
     opacity: 0.35,
   },
   dayText: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: '700',
     color: '#0F172A',
   },
@@ -335,14 +477,177 @@ const styles = StyleSheet.create({
     color: '#047857',
     fontWeight: '900',
   },
-  dayTextDisabled: {
+  dayTextHoliday: {
+    color: '#B45309',
+    fontWeight: '900',
+  },
+  dayTextPast: {
     color: '#94A3B8',
   },
+  holidayTagPill: {
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 4,
+    marginTop: -2,
+  },
+  holidayTagText: {
+    fontSize: 7.5,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    textTransform: 'uppercase',
+  },
   closedTag: {
-    fontSize: 8.5,
+    fontSize: 8,
     fontWeight: '800',
     color: '#EF4444',
     marginTop: -2,
+  },
+  satClosedTag: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: '#D97706',
+    marginTop: -2,
+  },
+  holidayAlertBanner: {
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+    borderRadius: 14,
+    padding: 12,
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  holidayAlertIcon: {
+    fontSize: 16,
+  },
+  holidayAlertTitle: {
+    fontSize: 12.5,
+    fontWeight: '900',
+    color: '#92400E',
+    marginBottom: 2,
+  },
+  holidayAlertText: {
+    fontSize: 11.5,
+    color: '#B45309',
+    lineHeight: 16,
+    fontWeight: '600',
+  },
+  holidayAlertClose: {
+    padding: 4,
+  },
+  selectedPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 14,
+    marginTop: 12,
+    gap: 10,
+  },
+  selectedPillIcon: {
+    fontSize: 20,
+  },
+  selectedPillText: {
+    fontSize: 13,
+    color: '#065F46',
+  },
+  selectedPillSub: {
+    fontSize: 11,
+    color: '#047857',
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  errorText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#DC2626',
+    marginTop: 8,
+  },
+  legendRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  legendLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  monthHolidaysBox: {
+    marginTop: 14,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 12,
+  },
+  monthHolidaysHeader: {
+    marginBottom: 8,
+  },
+  monthHolidaysTitle: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#14532D',
+  },
+  monthHolidayItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    gap: 10,
+  },
+  monthHolidayDateBadge: {
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    alignItems: 'center',
+    minWidth: 38,
+  },
+  monthHolidayDateText: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#92400E',
+  },
+  monthHolidayMonthText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#B45309',
+    textTransform: 'uppercase',
+  },
+  monthHolidayName: {
+    fontSize: 12.5,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  monthHolidaySource: {
+    fontSize: 10.5,
+    fontWeight: '600',
+    color: '#64748B',
+    marginTop: 1,
   },
   nativeWebInputRow: {
     flexDirection: 'row',
@@ -356,34 +661,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   nativeWebLabel: {
-    fontSize: 12.5,
-    color: '#64748B',
-    fontWeight: '600',
-  },
-  selectedPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ECFDF5',
-    borderWidth: 1,
-    borderColor: '#A7F3D0',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 12,
-    marginTop: 12,
-    gap: 8,
-  },
-  selectedPillIcon: {
-    fontSize: 16,
-  },
-  selectedPillText: {
-    fontSize: 13,
-    color: '#065F46',
-  },
-  errorText: {
     fontSize: 12,
+    color: '#64748B',
     fontWeight: '700',
-    color: '#DC2626',
-    marginTop: 8,
   },
 });
-

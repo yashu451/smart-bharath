@@ -1,6 +1,12 @@
 const mongoose = require('mongoose');
+const crypto = require('crypto');
+const QRCode = require('qrcode');
 const Activity = require('../models/Activity');
 const Document = require('../models/Document');
+const {
+  checkAppointmentDateAvailability,
+  checkAppointmentTimeAvailability,
+} = require('../constants/officialHolidays');
 
 const { memoryActivities, saveToDisk } = require('../config/memoryStore');
 
@@ -149,7 +155,8 @@ const getDashboardData = async (req, res, next) => {
       },
       upcomingAppointments,
       overdueAppointments,
-      recentActivities: enrichedActivities,
+      // Filter out AI Assistant chat events from Recent Activities on the Home dashboard
+      recentActivities: enrichedActivities.filter((a) => a.type !== 'assistant'),
     });
   } catch (error) {
     next(error);
@@ -224,18 +231,97 @@ const createActivity = async (req, res, next) => {
       });
     }
 
+    const activityMetadata = metadata ? { ...metadata } : {};
+
+    // Specific validation and real QR generation for Office Visit Appointments
+    if (type === 'appointment') {
+      const appointmentDate = activityMetadata.date;
+      const appointmentTime = activityMetadata.time;
+      const stateCode = (activityMetadata.state || 'ALL').toUpperCase();
+      const districtName = activityMetadata.district || '';
+
+      // 1. Validate date is not in the past in IST
+      const todayIST = getTodayISTString();
+      if (appointmentDate && appointmentDate < todayIST) {
+        return res.status(400).json({
+          success: false,
+          message: `Selected appointment date (${appointmentDate}) is in the past. Appointments must be scheduled for today or a future date.`,
+        });
+      }
+
+      // 2. Validate against verified gazetted public holidays and weekend closures
+      if (appointmentDate) {
+        const dateCheck = checkAppointmentDateAvailability(appointmentDate, stateCode, districtName);
+        if (!dateCheck.available) {
+          return res.status(400).json({
+            success: false,
+            message: `Booking not permitted on ${appointmentDate}: ${dateCheck.reason}`,
+            dateCheck,
+          });
+        }
+      }
+
+      // 3. Validate time slot within official office operating hours
+      if (appointmentTime) {
+        const timeCheck = checkAppointmentTimeAvailability(appointmentTime);
+        if (!timeCheck.available) {
+          return res.status(400).json({
+            success: false,
+            message: timeCheck.reason,
+          });
+        }
+      }
+
+      // 4. Securely generate unique appointment verification token
+      const randomSuffix = crypto.randomBytes(12).toString('hex');
+      const verificationToken = `sb-vtok-${Date.now().toString(36)}-${randomSuffix}`;
+      const bookingId =
+        activityMetadata.bookingId ||
+        (token ? token.replace(/^Token:\s*/i, '').trim() : `APT-SB-${Math.floor(100000 + Math.random() * 900000)}`);
+
+      // 5. Construct public Smart Bharat appointment verification URL
+      const host = req.get('host') || 'localhost:5000';
+      const protocol = req.protocol || 'http';
+      const clientOrigin = req.get('origin') || `${protocol}://${host.split(':')[0]}:8082`;
+      const verificationUrl = `${clientOrigin}/appointments/verify?id=${encodeURIComponent(bookingId)}&token=${encodeURIComponent(verificationToken)}`;
+
+      // 6. Generate real, scannable QR Code as Data URL
+      let qrCodeDataUrl = null;
+      try {
+        qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {
+          errorCorrectionLevel: 'M',
+          margin: 2,
+          width: 256,
+          color: {
+            dark: '#14532D',
+            light: '#FFFFFF',
+          },
+        });
+      } catch (qrErr) {
+        console.warn('[QR Generation] Warning:', qrErr.message);
+      }
+
+      activityMetadata.verificationToken = verificationToken;
+      activityMetadata.verificationUrl = verificationUrl;
+      activityMetadata.qrCodeDataUrl = qrCodeDataUrl;
+      activityMetadata.bookingId = bookingId;
+      activityMetadata.isInternalVerification = true;
+      activityMetadata.disclaimer =
+        "Smart Bharat Internal Appointment Verification (Not Official Government Verification)";
+    }
+
     const activityData = {
       userId,
       type,
       title: title.trim(),
       subtitle: subtitle ? subtitle.trim() : '',
-      token: token ? token.trim() : '',
+      token: token ? token.trim() : (activityMetadata.bookingId ? `Token: ${activityMetadata.bookingId}` : ''),
       status: status || 'In Progress',
       statusColor: statusColor || '#000080',
       statusBg: statusBg || '#EEF2FF',
       icon: icon || '📋',
       route: route || '/home',
-      metadata: metadata || {},
+      metadata: activityMetadata,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -287,7 +373,14 @@ const cancelActivity = async (req, res, next) => {
       try {
         activity = await Activity.findOneAndUpdate(
           { _id: id, userId },
-          { status: 'Cancelled', statusColor: '#DC2626', statusBg: '#FEE2E2' },
+          {
+            status: 'Cancelled',
+            statusColor: '#DC2626',
+            statusBg: '#FEE2E2',
+            'metadata.isCancelled': true,
+            'metadata.status': 'Cancelled',
+            'metadata.cancelledAt': new Date().toISOString(),
+          },
           { new: true }
         );
       } catch (dbErr) {
@@ -295,18 +388,24 @@ const cancelActivity = async (req, res, next) => {
       }
     }
 
-    if (!activity) {
-      const idx = memoryActivities.findIndex(
-        (a) => (a._id || a.id)?.toString() === id.toString() && (a.userId?.toString() || a.userId) === userId
-      );
-      if (idx !== -1) {
-        memoryActivities[idx].status = 'Cancelled';
-        memoryActivities[idx].statusColor = '#DC2626';
-        memoryActivities[idx].statusBg = '#FEE2E2';
-        activity = memoryActivities[idx];
-      }
+    // Also update in memory store
+    const idx = memoryActivities.findIndex(
+      (a) => (a._id || a.id)?.toString() === id.toString() && (a.userId?.toString() || a.userId) === userId
+    );
+    if (idx !== -1) {
+      memoryActivities[idx].status = 'Cancelled';
+      memoryActivities[idx].statusColor = '#DC2626';
+      memoryActivities[idx].statusBg = '#FEE2E2';
+      memoryActivities[idx].metadata = {
+        ...(memoryActivities[idx].metadata || {}),
+        isCancelled: true,
+        status: 'Cancelled',
+        cancelledAt: new Date().toISOString(),
+      };
+      memoryActivities[idx].updatedAt = new Date().toISOString();
+      if (!activity) activity = memoryActivities[idx];
+      saveToDisk('activities');
     }
-    saveToDisk('activities');
 
     if (!activity) {
       return res.status(404).json({
@@ -333,6 +432,38 @@ const updateActivity = async (req, res, next) => {
     const userId = (req.user._id || req.user.id || '').toString();
     const { id } = req.params;
     const { status, statusColor, statusBg, subtitle, metadata } = req.body;
+
+    // If rescheduling appointment date/time, validate against holidays and operating hours
+    if (metadata && (metadata.date || metadata.time)) {
+      if (metadata.date) {
+        const todayIST = getTodayISTString();
+        if (metadata.date < todayIST) {
+          return res.status(400).json({
+            success: false,
+            message: `Selected reschedule date (${metadata.date}) is in the past. Please select today or a future date.`,
+          });
+        }
+        const stateCode = (metadata.state || 'ALL').toUpperCase();
+        const districtName = metadata.district || '';
+        const dateCheck = checkAppointmentDateAvailability(metadata.date, stateCode, districtName);
+        if (!dateCheck.available) {
+          return res.status(400).json({
+            success: false,
+            message: `Rescheduling not permitted on ${metadata.date}: ${dateCheck.reason}`,
+            dateCheck,
+          });
+        }
+      }
+      if (metadata.time) {
+        const timeCheck = checkAppointmentTimeAvailability(metadata.time);
+        if (!timeCheck.available) {
+          return res.status(400).json({
+            success: false,
+            message: timeCheck.reason,
+          });
+        }
+      }
+    }
 
     const updates = {};
     if (status) updates.status = status;

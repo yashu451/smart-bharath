@@ -144,7 +144,10 @@ export default function ChooseServiceScreen() {
                   </Text>
                 </View>
 
-                <View className="bg-[#ECFDF5] border border-[#A7F3D0] px-5 py-2.5 rounded-xl">
+                <View
+                  style={{ minHeight: 48 }}
+                  className="bg-[#ECFDF5] border border-[#A7F3D0] px-5 py-3 rounded-2xl justify-center items-center"
+                >
                   <Text className="text-sm font-black text-[#14532D]">Book Slot →</Text>
                 </View>
               </TouchableOpacity>

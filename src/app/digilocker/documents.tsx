@@ -212,9 +212,10 @@ export default function MyDocumentsScreen() {
               setShowAddModal(true);
             }}
             activeOpacity={0.8}
+            style={{ minHeight: 46 }}
             className="bg-[#14532D] px-5 py-3 rounded-2xl flex-row items-center shadow-xs"
           >
-            <Text className="text-white text-sm font-black mr-1.5">+</Text>
+            <Text className="text-white text-base font-black mr-1.5">+</Text>
             <Text className="text-white text-sm font-black">Add Document</Text>
           </TouchableOpacity>
         </View>
@@ -282,10 +283,11 @@ export default function MyDocumentsScreen() {
                   setShowAddModal(true);
                 }}
                 activeOpacity={0.85}
+                style={{ minHeight: 52 }}
                 className="mt-7 bg-[#14532D] px-7 py-4 rounded-2xl shadow-xs flex-row items-center"
               >
-                <Text className="text-white font-black text-sm mr-2">+</Text>
-                <Text className="text-white font-black text-sm uppercase tracking-wider">
+                <Text className="text-white font-black text-base mr-2">+</Text>
+                <Text className="text-white font-black text-base uppercase tracking-wider">
                   Add Document
                 </Text>
               </TouchableOpacity>
@@ -360,7 +362,7 @@ export default function MyDocumentsScreen() {
                     </View>
 
                     {/* Actions Footer */}
-                    <View className="flex-row justify-between pt-3.5 border-t border-[#CADDCB]">
+                    <View className="flex-row justify-between pt-3.5 border-t border-[#CADDCB] gap-3">
                       <TouchableOpacity
                         onPress={() => {
                           router.push({
@@ -369,7 +371,8 @@ export default function MyDocumentsScreen() {
                           } as any);
                         }}
                         activeOpacity={0.7}
-                        className="w-[48%] py-3.5 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
+                        style={{ minHeight: 48 }}
+                        className="flex-1 py-3.5 px-4 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
                       >
                         <Text className="text-white text-sm font-black">View / Download</Text>
                       </TouchableOpacity>
@@ -377,7 +380,8 @@ export default function MyDocumentsScreen() {
                       <TouchableOpacity
                         onPress={() => handleDelete(doc._id, doc.name)}
                         activeOpacity={0.7}
-                        className="w-[48%] py-3.5 border border-red-200 bg-red-50/70 rounded-2xl justify-center items-center"
+                        style={{ minHeight: 48 }}
+                        className="flex-1 py-3.5 px-4 border border-red-200 bg-red-50/70 rounded-2xl justify-center items-center"
                       >
                         <Text className="text-red-600 text-sm font-black">Delete</Text>
                       </TouchableOpacity>
@@ -391,7 +395,8 @@ export default function MyDocumentsScreen() {
           {/* Return Button */}
           <TouchableOpacity
             onPress={() => router.replace('/home')}
-            className="mt-7 border border-[#CADDCB] py-4 rounded-2xl justify-center items-center bg-[#EDF5EE] shadow-xs"
+            style={{ minHeight: 52 }}
+            className="mt-7 border border-[#CADDCB] py-4 px-6 rounded-2xl justify-center items-center bg-[#EDF5EE] shadow-xs"
             activeOpacity={0.7}
           >
             <Text className="text-[#14532D] font-black text-sm uppercase tracking-wider">
@@ -546,23 +551,24 @@ export default function MyDocumentsScreen() {
                 </View>
 
                 {/* Upload Action Buttons */}
-                <View className="space-y-2">
+                <View className="gap-2.5">
                   <TouchableOpacity
                     onPress={handleSaveDocument}
                     disabled={isUploading || !selectedFile}
                     activeOpacity={0.85}
-                    className={`w-full py-3.5 rounded-xl justify-center items-center shadow-xs ${
+                    style={{ minHeight: 52 }}
+                    className={`w-full py-4 px-6 rounded-2xl justify-center items-center shadow-xs ${
                       isUploading || !selectedFile ? 'bg-slate-200' : 'bg-[#14532D]'
                     }`}
                   >
                     {isUploading ? (
                       <View className="flex-row items-center space-x-2">
                         <ActivityIndicator size="small" color="#FFFFFF" />
-                        <Text className="text-white text-xs font-bold ml-2">Saving Document...</Text>
+                        <Text className="text-white text-sm font-bold ml-2">Saving Document...</Text>
                       </View>
                     ) : (
                       <Text
-                        className={`text-xs font-bold uppercase tracking-wider ${
+                        className={`text-sm font-black uppercase tracking-wider ${
                           selectedFile ? 'text-white' : 'text-slate-400'
                         }`}
                       >
@@ -575,9 +581,10 @@ export default function MyDocumentsScreen() {
                     onPress={() => {
                       if (!isUploading) setShowAddModal(false);
                     }}
-                    className="w-full py-2.5 rounded-xl justify-center items-center"
+                    style={{ minHeight: 46 }}
+                    className="w-full py-3 rounded-2xl justify-center items-center border border-[#CADDCB] bg-[#EDF5EE]"
                   >
-                    <Text className="text-slate-500 text-xs font-bold">Cancel</Text>
+                    <Text className="text-slate-600 text-sm font-black">Cancel</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -615,9 +622,10 @@ export default function MyDocumentsScreen() {
                         [{ text: 'Understood' }]
                       );
                     }}
-                    className="mt-3 bg-amber-100 border border-amber-300 py-2.5 rounded-xl justify-center items-center"
+                    style={{ minHeight: 46 }}
+                    className="mt-3 bg-amber-100 border border-amber-300 py-3 px-4 rounded-xl justify-center items-center"
                   >
-                    <Text className="text-amber-900 text-xs font-bold">
+                    <Text className="text-amber-900 text-xs font-black">
                       Integration Status Details ℹ️
                     </Text>
                   </TouchableOpacity>

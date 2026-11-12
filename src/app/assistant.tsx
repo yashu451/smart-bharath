@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   ScrollView,
   Alert,
+  Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { chatApi } from '@/services/api';
@@ -68,6 +69,33 @@ export default function SmartAIAssistantScreen() {
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+
+  // Clear Chat Modal and Action State
+  const [showClearConfirmModal, setShowClearConfirmModal] = useState<boolean>(false);
+  const [isClearing, setIsClearing] = useState<boolean>(false);
+  const [clearError, setClearError] = useState<string | null>(null);
+
+  const handleConfirmClearChat = async () => {
+    setIsClearing(true);
+    setClearError(null);
+    try {
+      await chatApi.clearHistory();
+      const initialWelcome: Message = {
+        id: '1',
+        text: WELCOME_TEXT,
+        sender: 'ai',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      setMessages([initialWelcome]);
+      sessionMessagesCache = [initialWelcome];
+      setShowClearConfirmModal(false);
+    } catch (err: any) {
+      console.error('Failed to clear chat history:', err);
+      setClearError(err.message || 'Failed to clear conversation. Please try again.');
+    } finally {
+      setIsClearing(false);
+    }
+  };
 
   // Fetch persistent user-specific chat history from MongoDB on mount
   useEffect(() => {
@@ -364,37 +392,14 @@ export default function SmartAIAssistantScreen() {
 
           <TouchableOpacity
             onPress={() => {
-              Alert.alert(
-                'Clear Conversation',
-                'Are you sure you want to clear your chat history?',
-                [
-                  { text: 'Cancel', style: 'cancel' },
-                  {
-                    text: 'Clear',
-                    style: 'destructive',
-                    onPress: async () => {
-                      try {
-                        await chatApi.clearHistory();
-                        const initialWelcome: Message = {
-                          id: '1',
-                          text: WELCOME_TEXT,
-                          sender: 'ai',
-                          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        };
-                        setMessages([initialWelcome]);
-                        sessionMessagesCache = [initialWelcome];
-                      } catch (err: any) {
-                        Alert.alert('Error', err.message || 'Failed to clear chat history.');
-                      }
-                    },
-                  },
-                ]
-              );
+              setClearError(null);
+              setShowClearConfirmModal(true);
             }}
-            className="px-4 py-2 rounded-xl bg-[#E0EDE1] border border-[#CADDCB] shadow-xs"
+            style={{ minHeight: 44, minWidth: 76 }}
+            className="px-5 py-2.5 rounded-2xl bg-[#E0EDE1] border border-[#CADDCB] justify-center items-center shadow-xs"
             activeOpacity={0.7}
           >
-            <Text className="text-xs font-bold text-[#14532D]">Clear</Text>
+            <Text className="text-sm font-black text-[#14532D]">Clear</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -522,10 +527,11 @@ export default function SmartAIAssistantScreen() {
               onPress={() =>
                 Alert.alert('Voice Input', 'Multilingual speech recognition will be available in the upcoming release.')
               }
-              className="w-12 h-12 bg-[#E0EDE1] border border-[#CADDCB] rounded-2xl justify-center items-center mr-3 shadow-xs"
+              style={{ width: 52, height: 52 }}
+              className="bg-[#E0EDE1] border border-[#CADDCB] rounded-2xl justify-center items-center mr-3 shadow-xs"
               activeOpacity={0.7}
             >
-              <Text className="text-lg">🎙</Text>
+              <Text className="text-xl">🎙</Text>
             </TouchableOpacity>
 
             {/* Text input */}
@@ -535,20 +541,80 @@ export default function SmartAIAssistantScreen() {
               value={inputText}
               onChangeText={setInputText}
               onSubmitEditing={() => handleSend(inputText)}
-              className="flex-1 bg-[#F3F8F4] border border-[#CADDCB] px-4.5 h-12 rounded-2xl text-base font-semibold text-slate-900 mr-3"
+              style={{ height: 52 }}
+              className="flex-1 bg-[#F3F8F4] border border-[#CADDCB] px-4.5 rounded-2xl text-base font-semibold text-slate-900 mr-3"
             />
 
             {/* Send Button in Forest Green */}
             <TouchableOpacity
               onPress={() => handleSend(inputText)}
-              className="w-12 h-12 bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
+              style={{ width: 52, height: 52 }}
+              className="bg-[#14532D] rounded-2xl justify-center items-center shadow-xs"
               activeOpacity={0.8}
             >
-              <Text className="text-white text-lg font-bold">➔</Text>
+              <Text className="text-white text-xl font-bold">➔</Text>
             </TouchableOpacity>
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      {/* CLEAR CHAT CONFIRMATION MODAL */}
+      <Modal
+        visible={showClearConfirmModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => !isClearing && setShowClearConfirmModal(false)}
+      >
+        <View className="flex-1 bg-black/60 justify-center items-center px-6">
+          <View className="w-full max-w-sm bg-[#F3F8F4] border border-[#CADDCB] rounded-3xl p-6 shadow-xl">
+            <View className="w-14 h-14 rounded-2xl bg-red-100 border border-red-200 justify-center items-center mb-4 self-center">
+              <Text className="text-2xl">🗑️</Text>
+            </View>
+
+            <Text className="text-lg font-black text-slate-900 text-center mb-1">
+              Clear Conversation?
+            </Text>
+
+            <Text className="text-xs text-slate-600 text-center mb-4 leading-relaxed font-medium">
+              Are you sure you want to clear your conversation with Smart Bharat AI? This will remove all previous questions and responses from this device and your secure MongoDB cloud history.
+            </Text>
+
+            {clearError ? (
+              <View className="bg-red-50 border border-red-200 p-3 rounded-xl mb-4">
+                <Text className="text-xs text-red-700 font-bold text-center">{clearError}</Text>
+              </View>
+            ) : null}
+
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                onPress={() => setShowClearConfirmModal(false)}
+                disabled={isClearing}
+                style={{ minHeight: 48 }}
+                className="flex-1 py-3.5 bg-[#EDF5EE] border border-[#CADDCB] rounded-2xl justify-center items-center"
+                activeOpacity={0.7}
+              >
+                <Text className="text-sm font-black text-slate-700 uppercase tracking-wider">Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={handleConfirmClearChat}
+                disabled={isClearing}
+                style={{ minHeight: 48 }}
+                className="flex-1 py-3.5 bg-red-600 rounded-2xl justify-center items-center flex-row"
+                activeOpacity={0.85}
+              >
+                {isClearing ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text className="text-sm font-black text-white uppercase tracking-wider">
+                    Clear Chat
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
