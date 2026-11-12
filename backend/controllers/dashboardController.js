@@ -10,6 +10,7 @@ const {
 } = require('../constants/officialHolidays');
 
 const { memoryActivities, memoryAppointments, saveToDisk } = require('../config/memoryStore');
+const { resolveCitizenUserIds, buildUserFilter } = require('../config/userResolution');
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
@@ -68,6 +69,8 @@ const calculateISTAppointmentCountdown = (dateStr) => {
 // @access  Private (Derived strictly from verified JWT)
 const getDashboardData = async (req, res, next) => {
   try {
+    const userIds = await resolveCitizenUserIds(req.user);
+    const userFilter = buildUserFilter(userIds);
     const userId = req.user._id || req.user.id;
     const cleanUserId = userId ? userId.toString() : '';
 
@@ -76,8 +79,8 @@ const getDashboardData = async (req, res, next) => {
 
     if (isDbConnected()) {
       try {
-        userActivities = await Activity.find({ userId: cleanUserId }).sort({ createdAt: -1 });
-        const realDocsCount = await Document.countDocuments({ userId: cleanUserId });
+        userActivities = await Activity.find(userFilter).sort({ createdAt: -1 });
+        const realDocsCount = await Document.countDocuments(userFilter);
         documentsCount = Math.max(
           realDocsCount,
           userActivities.filter((a) => a.type === 'document').length
@@ -85,13 +88,13 @@ const getDashboardData = async (req, res, next) => {
       } catch (dbErr) {
         console.warn('[Dashboard] Mongo query fallback:', dbErr.message);
         userActivities = memoryActivities
-          .filter((a) => (a.userId?.toString() || a.userId) === cleanUserId)
+          .filter((a) => userIds.includes(a.userId?.toString() || a.userId))
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         documentsCount = userActivities.filter((a) => a.type === 'document').length;
       }
     } else {
       userActivities = memoryActivities
-        .filter((a) => (a.userId?.toString() || a.userId) === cleanUserId)
+        .filter((a) => userIds.includes(a.userId?.toString() || a.userId))
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       documentsCount = userActivities.filter((a) => a.type === 'document').length;
     }
@@ -169,29 +172,29 @@ const getDashboardData = async (req, res, next) => {
 // @access  Private (Derived strictly from verified JWT)
 const getUserActivities = async (req, res, next) => {
   try {
-    const userId = req.user._id || req.user.id;
-    const cleanUserId = userId ? userId.toString() : '';
+    const userIds = await resolveCitizenUserIds(req.user);
+    const userFilter = buildUserFilter(userIds);
     const { type } = req.query;
 
     let activities = [];
 
     if (isDbConnected()) {
       try {
-        const filter = { userId: cleanUserId };
+        let filter = userFilter;
         if (type && type !== 'all') {
-          filter.type = type;
+          filter = { $and: [userFilter, { type }] };
         }
         activities = await Activity.find(filter).sort({ createdAt: -1 });
       } catch (dbErr) {
         console.warn('[Activities] Mongo query fallback:', dbErr.message);
         activities = memoryActivities
-          .filter((a) => (a.userId?.toString() || a.userId) === cleanUserId)
+          .filter((a) => userIds.includes(a.userId?.toString() || a.userId))
           .filter((a) => (!type || type === 'all' ? true : a.type === type))
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       }
     } else {
       activities = memoryActivities
-        .filter((a) => (a.userId?.toString() || a.userId) === cleanUserId)
+        .filter((a) => userIds.includes(a.userId?.toString() || a.userId))
         .filter((a) => (!type || type === 'all' ? true : a.type === type))
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }

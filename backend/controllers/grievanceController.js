@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Grievance = require('../models/Grievance');
 const Activity = require('../models/Activity');
 const { memoryGrievances, memoryActivities, saveToDisk } = require('../config/memoryStore');
+const { resolveCitizenUserIds, buildUserFilter } = require('../config/userResolution');
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
@@ -929,19 +930,32 @@ const getGuidance = async (req, res) => {
 // @access  Private (Derived strictly from verified JWT)
 const getGrievances = async (req, res) => {
   try {
-    const userId = (req.user._id || req.user.id).toString();
+    const userIds = await resolveCitizenUserIds(req.user);
+    const userFilter = buildUserFilter(userIds);
     let records = [];
 
     if (isDbConnected()) {
       try {
-        records = await Grievance.find({ userId }).sort({ createdAt: -1 });
+        records = await Grievance.find(userFilter).sort({ createdAt: -1 });
         records = records.map((r) => (r.toObject ? r.toObject() : r));
+
+        // Auto-heal legacy userId to current user's MongoDB ObjectId if needed
+        const currentUserId = (req.user._id || req.user.id).toString();
+        if (mongoose.Types.ObjectId.isValid(currentUserId)) {
+          const legacyIds = userIds.filter((id) => id !== currentUserId);
+          if (legacyIds.length > 0) {
+            Grievance.updateMany(
+              { userId: { $in: legacyIds } },
+              { $set: { userId: new mongoose.Types.ObjectId(currentUserId) } }
+            ).catch((err) => console.warn('[Grievance Heal]', err.message));
+          }
+        }
       } catch (dbErr) {
-        console.warn('[Grievance] Mongo fallback:', dbErr.message);
-        records = memoryGrievances.filter((g) => (g.userId?.toString() || g.userId) === userId);
+        console.warn('[Grievance] Mongo query error:', dbErr.message);
+        records = memoryGrievances.filter((g) => userIds.includes(g.userId?.toString() || g.userId));
       }
     } else {
-      records = memoryGrievances.filter((g) => (g.userId?.toString() || g.userId) === userId);
+      records = memoryGrievances.filter((g) => userIds.includes(g.userId?.toString() || g.userId));
     }
 
     // Enhance records with calculated days elapsed and timeline analysis
@@ -980,18 +994,19 @@ const getGrievances = async (req, res) => {
 // @access  Private (Derived strictly from verified JWT)
 const getGrievanceInsights = async (req, res) => {
   try {
-    const userId = (req.user._id || req.user.id).toString();
+    const userIds = await resolveCitizenUserIds(req.user);
+    const userFilter = buildUserFilter(userIds);
     let records = [];
 
     if (isDbConnected()) {
       try {
-        records = await Grievance.find({ userId });
+        records = await Grievance.find(userFilter);
         records = records.map((r) => (r.toObject ? r.toObject() : r));
       } catch (dbErr) {
-        records = memoryGrievances.filter((g) => (g.userId?.toString() || g.userId) === userId);
+        records = memoryGrievances.filter((g) => userIds.includes(g.userId?.toString() || g.userId));
       }
     } else {
-      records = memoryGrievances.filter((g) => (g.userId?.toString() || g.userId) === userId);
+      records = memoryGrievances.filter((g) => userIds.includes(g.userId?.toString() || g.userId));
     }
 
     if (records.length === 0) {
@@ -1255,6 +1270,8 @@ const createGrievance = async (req, res) => {
 // @access  Private
 const updateGrievance = async (req, res) => {
   try {
+    const userIds = await resolveCitizenUserIds(req.user);
+    const userFilter = buildUserFilter(userIds);
     const userId = (req.user._id || req.user.id).toString();
     const { id } = req.params;
     const {
@@ -1273,7 +1290,7 @@ const updateGrievance = async (req, res) => {
 
     if (isDbConnected()) {
       try {
-        grievance = await Grievance.findOne({ _id: id, userId });
+        grievance = await Grievance.findOne({ _id: id, ...userFilter });
       } catch (e) {
         grievance = null;
       }
@@ -1281,7 +1298,7 @@ const updateGrievance = async (req, res) => {
 
     if (!grievance) {
       const idx = memoryGrievances.findIndex(
-        (g) => (g._id?.toString() || g.id?.toString()) === id.toString() && (g.userId?.toString() || g.userId) === userId
+        (g) => (g._id?.toString() || g.id?.toString()) === id.toString() && userIds.includes(g.userId?.toString() || g.userId)
       );
       if (idx !== -1) grievance = memoryGrievances[idx];
     }
@@ -1392,6 +1409,8 @@ const updateGrievance = async (req, res) => {
 // @access  Private
 const deleteGrievance = async (req, res) => {
   try {
+    const userIds = await resolveCitizenUserIds(req.user);
+    const userFilter = buildUserFilter(userIds);
     const userId = (req.user._id || req.user.id).toString();
     const { id } = req.params;
 
@@ -1400,7 +1419,7 @@ const deleteGrievance = async (req, res) => {
 
     if (isDbConnected()) {
       try {
-        const found = await Grievance.findOneAndDelete({ _id: id, userId });
+        const found = await Grievance.findOneAndDelete({ _id: id, ...userFilter });
         if (found) {
           deleted = true;
           refNum = found.referenceNumber;
@@ -1411,7 +1430,7 @@ const deleteGrievance = async (req, res) => {
     }
 
     const idx = memoryGrievances.findIndex(
-      (g) => (g._id?.toString() || g.id?.toString()) === id.toString() && (g.userId?.toString() || g.userId) === userId
+      (g) => (g._id?.toString() || g.id?.toString()) === id.toString() && userIds.includes(g.userId?.toString() || g.userId)
     );
     if (idx !== -1) {
       refNum = memoryGrievances[idx].referenceNumber;

@@ -49,3 +49,5 @@ Thumbs.db
 # Generated native folders
 /ios
 /android
+
+.env.production

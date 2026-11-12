@@ -17,6 +17,7 @@ import {
 import { useRouter, useFocusEffect } from 'expo-router';
 import { grievanceApi, GrievanceRecord } from '@/services/api';
 import { resolvePortalDestination } from '@/constants/grievance-routing';
+import { getAuthToken } from '@/services/storage';
 
 export default function MyComplaintsScreen() {
   const router = useRouter();
@@ -24,6 +25,8 @@ export default function MyComplaintsScreen() {
   // State
   const [complaints, setComplaints] = useState<GrievanceRecord[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isAuthError, setIsAuthError] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
 
@@ -49,14 +52,36 @@ export default function MyComplaintsScreen() {
   // Fetch real complaints strictly for the authenticated citizen from MongoDB
   const fetchComplaints = useCallback(async () => {
     setIsLoading(true);
+    setErrorMessage(null);
+    setIsAuthError(false);
+
+    const token = getAuthToken();
+    if (!token) {
+      setIsLoading(false);
+      setIsAuthError(true);
+      setErrorMessage('Please sign in to view and track your submitted complaints.');
+      setComplaints([]);
+      return;
+    }
+
     try {
       const res = await grievanceApi.getGrievances();
       if (res.success && Array.isArray(res.grievances)) {
         setComplaints(res.grievances);
+        setErrorMessage(null);
       } else {
         setComplaints([]);
+        setErrorMessage(res.message || 'Could not retrieve your complaint records.');
       }
-    } catch {
+    } catch (err: any) {
+      const msg = err.message || 'Network error fetching complaints.';
+      const is401 = msg.includes('401') || msg.toLowerCase().includes('authorized') || msg.toLowerCase().includes('token');
+      if (is401) {
+        setIsAuthError(true);
+        setErrorMessage('Your session has expired or is not authenticated. Please sign in again.');
+      } else {
+        setErrorMessage(msg);
+      }
       setComplaints([]);
     } finally {
       setIsLoading(false);
@@ -328,6 +353,66 @@ export default function MyComplaintsScreen() {
             <View className="py-24 items-center justify-center">
               <ActivityIndicator size="large" color="#14532D" />
               <Text className="text-sm text-slate-500 font-bold mt-3">Loading your complaints...</Text>
+            </View>
+          ) : errorMessage ? (
+            /* Explicit Authentication or Network Error State */
+            <View
+              style={{
+                shadowColor: isAuthError ? '#D97706' : '#DC2626',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.06,
+                shadowRadius: 10,
+                elevation: 2,
+              }}
+              className={`rounded-3xl p-8 items-center my-4 border ${
+                isAuthError ? 'bg-[#FFFBEB] border-[#FDE68A]' : 'bg-[#FEF2F2] border-[#FECACA]'
+              }`}
+            >
+              <View
+                className={`w-16 h-16 rounded-2xl justify-center items-center mb-4 ${
+                  isAuthError ? 'bg-[#FEF3C7]' : 'bg-[#FEE2E2]'
+                }`}
+              >
+                <Text className="text-3xl">{isAuthError ? '🔒' : '⚠️'}</Text>
+              </View>
+              <Text
+                className={`text-xl font-black text-center tracking-tight mb-2 ${
+                  isAuthError ? 'text-amber-900' : 'text-red-900'
+                }`}
+              >
+                {isAuthError ? 'Authentication Required' : 'Unable to Load Complaints'}
+              </Text>
+              <Text
+                className={`text-sm text-center leading-relaxed max-w-md font-medium mb-6 ${
+                  isAuthError ? 'text-amber-800' : 'text-red-700'
+                }`}
+              >
+                {errorMessage}
+              </Text>
+              <View className="flex-row items-center gap-3">
+                {isAuthError ? (
+                  <TouchableOpacity
+                    onPress={() => router.push('/auth' as any)}
+                    style={{ minHeight: 48 }}
+                    className="bg-[#14532D] px-7 py-3 rounded-2xl shadow-xs justify-center items-center"
+                    activeOpacity={0.8}
+                  >
+                    <Text className="text-white font-black text-sm uppercase tracking-wider">
+                      Sign In to Account →
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+                <TouchableOpacity
+                  onPress={fetchComplaints}
+                  style={{ minHeight: 48 }}
+                  className="bg-[#E0EDE1] border border-[#CADDCB] px-6 py-3 rounded-2xl shadow-xs justify-center items-center flex-row"
+                  activeOpacity={0.8}
+                >
+                  <Text className="text-[#14532D] font-black text-sm">
+                    Retry 🔄
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           ) : filteredComplaints.length === 0 ? (
             /* Empty State for New Citizens or No Matches */
