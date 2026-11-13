@@ -7,7 +7,12 @@ const {
   saveScheme,
   removeSavedScheme,
   recordSchemeApplication,
+  evaluateSchemes,
 } = require('../controllers/schemeController');
+
+// Public/Private Scheme Evaluation Engine
+router.post('/evaluate', evaluateSchemes);
+router.post('/recommendations', evaluateSchemes);
 
 router.use(protect);
 

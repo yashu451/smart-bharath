@@ -418,6 +418,13 @@ export interface SavedSchemeItem {
 }
 
 export const schemeApi = {
+  evaluateSchemes: async (profile: any) => {
+    return request<any>('/schemes/evaluate', {
+      method: 'POST',
+      body: JSON.stringify(profile),
+    });
+  },
+
   getSavedSchemes: async () => {
     return request<{ count: number; schemes: SavedSchemeItem[] }>('/schemes/saved', {
       method: 'GET',

@@ -311,11 +311,29 @@ const recordSchemeApplication = async (req, res, next) => {
   }
 };
 
+// @desc    Evaluate citizen eligibility against verified scheme criteria
+// @route   POST /api/schemes/evaluate
+// @access  Public / Private
+const evaluateSchemes = async (req, res, next) => {
+  try {
+    const { evaluateBackendSchemeEligibility } = require('../utils/schemeEligibility');
+    const profile = req.body;
+    const result = evaluateBackendSchemeEligibility(profile);
+    res.json({
+      success: true,
+      ...result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getSavedSchemes,
   checkIsSaved,
   saveScheme,
   removeSavedScheme,
   recordSchemeApplication,
+  evaluateSchemes,
 };
 

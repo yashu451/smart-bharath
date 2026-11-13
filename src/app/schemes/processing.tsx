@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, SafeAreaView, ScrollView, StatusBar, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { storage } from '@/services/storage';
 
 const STEPS = [
   'Analyzing citizen profile parameters',
@@ -12,9 +13,19 @@ const STEPS = [
 
 export default function AIProcessingScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
 
   useEffect(() => {
+    // Persist profile to storage for session resilience
+    if (params && Object.keys(params).length > 0) {
+      try {
+        storage.setItem('smart_bharat_scheme_profile', JSON.stringify(params));
+      } catch (e) {
+        console.warn('Could not persist scheme profile to storage:', e);
+      }
+    }
+
     const timers = [
       setTimeout(() => setCurrentStep(2), 600),
       setTimeout(() => setCurrentStep(3), 1200),
@@ -22,14 +33,17 @@ export default function AIProcessingScreen() {
       setTimeout(() => setCurrentStep(5), 2400),
       setTimeout(() => setCurrentStep(6), 3000),
       setTimeout(() => {
-        router.replace('/schemes/recommendations' as any);
+        router.replace({
+          pathname: '/schemes/recommendations',
+          params: params as any,
+        } as any);
       }, 3400),
     ];
 
     return () => {
       timers.forEach((t) => clearTimeout(t));
     };
-  }, []);
+  }, [params, router]);
 
   const getStepStatus = (index: number) => {
     const stepNumber = index + 1;
