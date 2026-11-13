@@ -39,8 +39,12 @@ interface ApiResponse<T = any> {
   [key: string]: any;
 }
 
-async function request<T = any>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
+async function request<T = any>(
+  endpoint: string,
+  options: RequestInit & { timeoutMs?: number } = {}
+): Promise<ApiResponse<T>> {
   const token = getAuthToken();
+  const timeoutMs = options.timeoutMs ?? 15000; // Strict 15s timeout maximum
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -54,11 +58,19 @@ async function request<T = any>(endpoint: string, options: RequestInit = {}): Pr
 
   const url = `${API_BASE_URL}${endpoint}`;
 
+  const controller = new AbortController();
+  const timer = setTimeout(() => {
+    controller.abort();
+  }, timeoutMs);
+
   try {
     const res = await fetch(url, {
       ...options,
       headers,
+      signal: options.signal || controller.signal,
     });
+
+    clearTimeout(timer);
 
     const data = await res.json().catch(() => ({}));
 
@@ -69,6 +81,10 @@ async function request<T = any>(endpoint: string, options: RequestInit = {}): Pr
 
     return data;
   } catch (error: any) {
+    clearTimeout(timer);
+    if (error.name === 'AbortError' || error.message?.includes('aborted')) {
+      throw new Error(`Request timed out after ${timeoutMs / 1000}s connecting to ${endpoint}.`);
+    }
     // If backend is not running or unreachable, provide clear error message
     if (error.message?.includes('Network request failed') || error.message?.includes('Failed to fetch')) {
       throw new Error('Cannot connect to backend server at ' + API_BASE_URL + '. Please ensure the backend is running.');

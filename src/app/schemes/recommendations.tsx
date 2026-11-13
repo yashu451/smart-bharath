@@ -68,8 +68,22 @@ export default function RecommendedSchemesScreen() {
       }
     }
 
+    // Check if pre-evaluated schemes exist from processing screen
+    let preEvaluated: EligibilityResult | null = null;
+    try {
+      const cached = storage.getItem('smart_bharat_evaluated_schemes');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && Array.isArray(parsed.eligibleSchemes)) {
+          preEvaluated = parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Could not read cached evaluated schemes:', e);
+    }
+
     setProfile(resolvedProfile);
-    const evalResult = evaluateSchemeEligibility(resolvedProfile, MOCK_SCHEMES_DB);
+    const evalResult = preEvaluated || evaluateSchemeEligibility(resolvedProfile, MOCK_SCHEMES_DB);
     setEvaluation(evalResult);
 
     // If profile is missing required criteria, default tab to all schemes or stay recommended
@@ -360,10 +374,10 @@ export default function RecommendedSchemesScreen() {
                     <Text className="text-2xl">🔍</Text>
                   </View>
                   <Text className="text-2xl font-black text-[#14532D] text-center mb-2">
-                    No Matching Schemes Found
+                    No Eligible Schemes Found
                   </Text>
                   <Text className="text-base font-medium text-slate-600 text-center max-w-xl leading-relaxed mb-5">
-                    Based on your verified answers (Age: {profile?.age || 'N/A'}, Occupation: {profile?.occupation || 'N/A'}, Annual Income: {formatRupees(profile?.income)}), you do not currently meet the mandatory eligibility conditions for any of the 8 central government schemes currently in our catalog.
+                    Based on your verified answers (Age: {profile?.age || 'N/A'}, Occupation: {profile?.occupation || 'N/A'}, Annual Income: {formatRupees(profile?.income)}), you do not currently meet the mandatory eligibility conditions for any of the 8 central government schemes in our catalog.
                   </Text>
                   <View className="bg-amber-50 border border-amber-200 rounded-2xl p-4 max-w-xl w-full mb-6">
                     <Text className="text-xs font-black text-amber-900 uppercase tracking-wider mb-1">
@@ -389,7 +403,7 @@ export default function RecommendedSchemesScreen() {
                       className="flex-1 py-4 px-6 rounded-2xl justify-center items-center"
                     >
                       <Text className="text-white text-base font-black uppercase tracking-wider">
-                        Re-run Questionnaire 🔄
+                        Review / Re-run Questionnaire 🔄
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
